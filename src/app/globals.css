@@ -2,26 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  ::selection {
+    background-color: #8A6818;
+    color: #FFFFFF;
   }
-}
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    @apply bg-background text-foreground antialiased;
+    caret-color: #8A6818;
+  }
+
+  /* Accessible default focus ring themed to the brand palette */
+  :focus-visible {
+    outline: 2px solid #8A6818;
+    outline-offset: 2px;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Utility to hide native scrollbar while retaining touch scroll */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
