@@ -11,7 +11,7 @@ export const ProductCard = ({ product }: { product: Product }) => {
     <article className="overflow-hidden group flex flex-col h-full bg-white border border-gray-200/90 rounded-xl hover:border-gray-300 hover:shadow-md transition-all duration-200">
       <Link 
         href={`/${product.slug}`} 
-        className="block relative h-36 sm:h-40 md:h-44 w-full overflow-hidden bg-gray-50 focus:outline-none flex items-center justify-center p-2"
+        className="block relative h-40 sm:h-44 md:h-48 w-full overflow-hidden bg-white focus:outline-none flex items-center justify-center p-4"
         tabIndex={-1}
         aria-hidden="true"
       >

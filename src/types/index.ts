@@ -20,6 +20,7 @@ export interface Product {
   stock: number;
   sku: string;
   imageUrl: string;
+  images: string[];
   status: 'ACTIVE' | 'INACTIVE';
   featured: boolean;
   categoryId: string;

@@ -28,7 +28,7 @@ export default function BannerSlider({ banners }: { banners: BannerItem[] }) {
   return (
     <section 
       aria-label="Promociones y novedades"
-      className="relative w-full h-56 md:h-72 lg:h-[340px] bg-primary overflow-hidden"
+      className="relative w-full h-72 md:h-96 lg:h-[480px] bg-primary overflow-hidden"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocus={() => setIsPaused(true)}

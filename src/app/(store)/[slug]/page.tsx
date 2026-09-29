@@ -3,6 +3,7 @@ import { fetcher } from '@/services/api';
 import { Product } from '@/types';
 import { notFound } from 'next/navigation';
 import { AddToCartButton } from '@/components/features/AddToCartButton';
+import { ProductGallery } from '@/components/features/ProductGallery';
 import ShareProductButton from '@/components/features/ShareProductButton';
 import Link from 'next/link';
 import { ChevronRight, ShieldCheck, Truck } from 'lucide-react';
@@ -56,13 +57,12 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
       <div className="bg-white border border-gray-200/90 rounded-2xl overflow-hidden shadow-xs">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-0">
           
-          {/* Imagen de Producto - Contenedor compacto */}
-          <div className="md:col-span-5 lg:col-span-4 bg-gray-50 flex items-center justify-center relative border-b md:border-b-0 md:border-r border-gray-200/80 p-3 sm:p-6">
-            <div className="w-full max-w-[200px] sm:max-w-[240px] md:max-w-[280px] aspect-square flex items-center justify-center">
-              <img 
-                src={product.imageUrl} 
-                alt={product.name} 
-                className="max-h-full max-w-full object-contain"
+          {/* Imagen de Producto */}
+          <div className="md:col-span-5 lg:col-span-5 bg-white relative border-b md:border-b-0 md:border-r border-gray-100 p-6 sm:p-10">
+            <div className="sticky top-12">
+              <ProductGallery 
+                images={product.images?.length > 0 ? product.images : [product.imageUrl]} 
+                productName={product.name} 
               />
             </div>
             {product.stock <= 0 && (
@@ -75,7 +75,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
           </div>
 
           {/* Detalles de Producto */}
-          <div className="md:col-span-7 lg:col-span-8 p-4 sm:p-6 md:p-10 flex flex-col justify-between">
+          <div className="md:col-span-7 lg:col-span-7 p-4 sm:p-6 md:p-10 flex flex-col justify-between">
             <div>
               <h1 className="text-xl sm:text-2xl md:text-4xl font-extrabold text-primary mb-2 md:mb-4 leading-tight tracking-tight">
                 {product.name}
@@ -103,9 +103,6 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
               
               <div className="text-xs text-gray-500 mb-3 md:mb-5 flex items-center gap-4 border-t border-gray-100 pt-2 md:pt-3">
                 <p>SKU: <span className="font-mono text-gray-700">{product.sku}</span></p>
-                {product.stock > 0 && (
-                  <p className="text-emerald-700 font-medium">● En existencia</p>
-                )}
               </div>
             </div>
             

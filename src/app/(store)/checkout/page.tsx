@@ -6,6 +6,7 @@ import { useCartStore } from '@/store/useCartStore';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { fetcher } from '@/services/api';
+import { CheckCircle } from 'lucide-react';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function CheckoutPage() {
   const [shippingCost, setShippingCost] = useState(30); // Default, luego se actualiza
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -40,7 +42,7 @@ export default function CheckoutPage() {
 
   if (!mounted) return null;
 
-  if (items.length === 0) {
+  if (items.length === 0 && !isSuccess) {
     router.push('/carrito');
     return null;
   }
@@ -77,13 +79,13 @@ export default function CheckoutPage() {
         paymentMethod: 'CASH_ON_DELIVERY',
       };
 
-      const response = await fetcher<{ orderNumber: string }>('/orders', {
+      await fetcher('/orders', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
 
       clearCart();
-      router.push(`/checkout/exito?order=${response.orderNumber}`);
+      setIsSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error al procesar tu pedido. Intenta nuevamente.');
       setLoading(false);
@@ -116,7 +118,25 @@ export default function CheckoutPage() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-12 relative">
+      {/* Modal de Éxito */}
+      {isSuccess && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-10 h-10 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-3">¡Pedido Confirmado!</h2>
+            <p className="text-gray-500 mb-8 leading-relaxed">
+              Gracias por tu compra. Te contactaremos pronto para organizar el envío de tu paquete.
+            </p>
+            <Button onClick={() => router.push('/')} fullWidth size="lg" className="rounded-xl py-6 text-base shadow-md hover:shadow-lg transition-all">
+              Volver al inicio
+            </Button>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-3xl font-bold text-primary mb-8 text-center">Checkout</h1>
 
       <div className="flex flex-col lg:flex-row gap-8 max-w-6xl mx-auto">
@@ -259,7 +279,7 @@ export default function CheckoutPage() {
                   <span>Pago contra entrega garantizado</span>
                 </p>
                 <p className="text-amber-800">
-                  Pagarás el total exacto en efectivo al recibir tu paquete. El repartidor te contactará antes de la entrega.
+                  Pagarás el total exacto en efectivo al recibir tu paquete. Envío de 1 a 3 días hábiles.
                 </p>
               </div>
 

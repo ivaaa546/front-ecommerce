@@ -83,9 +83,16 @@ export const AddToCartButton = ({ product }: { product: Product }) => {
             </button>
           </div>
         </div>
-        <span className="text-xs text-gray-500">
-          ({product.stock} disponibles)
-        </span>
+        {product.stock <= 5 ? (
+          <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md border border-red-200/50 shadow-sm">
+            ¡Últimas {product.stock} disponibles!
+          </span>
+        ) : (
+          <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+            En existencia
+          </span>
+        )}
       </div>
       
       {/* Botones de Compra: Lado a lado en móvil y escritorio para no empujar la vista */}

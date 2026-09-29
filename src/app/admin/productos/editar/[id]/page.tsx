@@ -24,6 +24,7 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
     sku: '',
     categoryId: '',
     imageUrl: '',
+    images: [] as string[],
   });
 
   useEffect(() => {
@@ -48,6 +49,7 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
             sku: product.sku,
             categoryId: product.categoryId,
             imageUrl: product.imageUrl,
+            images: product.images || (product.imageUrl ? [product.imageUrl] : []),
           });
         } else {
           alert('Producto no encontrado');
@@ -63,30 +65,56 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
     loadData();
   }, [params.id, router]);
 
+  
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    if (form.images.length + files.length > 5) {
+      alert('Puedes subir un máximo de 5 imágenes.');
+      return;
+    }
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
+    const newUrls: string[] = [];
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/uploads`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/uploads`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+        if (!res.ok) throw new Error('Error subiendo imagen');
+        const data = await res.json();
+        newUrls.push(data.url);
+      }
+      
+      const updatedImages = [...form.images, ...newUrls];
+      setForm({ 
+        ...form, 
+        images: updatedImages,
+        imageUrl: updatedImages[0] || form.imageUrl // La primera es la principal
       });
-      if (!res.ok) throw new Error('Error subiendo imagen');
-      const data = await res.json();
-      setForm({ ...form, imageUrl: data.url });
     } catch (err: any) {
       alert(err.message);
     } finally {
       setUploading(false);
     }
   };
+
+  const removeImage = (index: number) => {
+    const newImages = [...form.images];
+    newImages.splice(index, 1);
+    setForm({
+      ...form,
+      images: newImages,
+      imageUrl: newImages[0] || ''
+    });
+  };
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,10 +194,21 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
         </div>
 
         <div className="flex flex-col space-y-2 pt-2 border-t">
-          <label className="text-sm font-medium text-gray-700">Imagen del producto</label>
-          <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
-          {uploading && <span className="text-xs text-blue-500">Subiendo imagen a Cloudinary...</span>}
-          {form.imageUrl && <img src={form.imageUrl} alt="Preview" className="h-32 object-contain bg-gray-100 rounded border" />}
+          <label className="text-sm font-medium text-gray-700">Imágenes del producto (Máx 5)</label>
+          <input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={uploading || form.images.length >= 5} />
+          {uploading && <span className="text-xs text-blue-500">Subiendo imágenes a Cloudinary...</span>}
+          
+          {form.images.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {form.images.map((url, i) => (
+                <div key={i} className="relative group">
+                  <img src={url} alt="Preview" className="h-24 w-24 object-cover bg-gray-100 rounded border" />
+                  {i === 0 && <span className="absolute bottom-0 left-0 bg-primary text-white text-[10px] px-1 w-full text-center">Principal</span>}
+                  <button type="button" onClick={() => removeImage(i)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100">×</button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="pt-4">
