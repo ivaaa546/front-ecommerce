@@ -50,7 +50,7 @@ export default function CarritoPage() {
           ({items.reduce((acc, i) => acc + i.quantity, 0)} {items.reduce((acc, i) => acc + i.quantity, 0) === 1 ? 'ítem' : 'ítems'})
         </span>
       </div>
-      
+
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* Lista de productos */}
         <div className="flex-1 w-full space-y-4 divide-y divide-gray-100">
@@ -58,10 +58,10 @@ export default function CarritoPage() {
             <div key={item.productId} className="pt-4 first:pt-0 flex gap-4 items-start">
               {/* Imagen del Producto */}
               <div className="w-20 h-24 sm:w-24 sm:h-28 bg-white border border-gray-200 rounded-md p-1.5 flex items-center justify-center shrink-0 overflow-hidden">
-                <img 
-                  src={item.imageUrl} 
-                  alt={item.name} 
-                  className="max-h-full max-w-full object-contain" 
+                <img
+                  src={item.imageUrl}
+                  alt={item.name}
+                  className="max-h-full max-w-full object-contain"
                 />
               </div>
 
@@ -69,13 +69,13 @@ export default function CarritoPage() {
               <div className="flex-1 min-w-0 flex flex-col justify-between h-24 sm:h-28">
                 <div>
                   <div className="flex items-start justify-between gap-2">
-                    <Link 
-                      href={`/${item.slug || item.productId}`} 
+                    <Link
+                      href={`/${item.slug || item.productId}`}
                       className="font-bold text-sm sm:text-base text-black hover:text-accent line-clamp-2 leading-tight"
                     >
                       {item.name}
                     </Link>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => removeItem(item.productId)}
                       className="p-1 text-gray-700 hover:text-red-600 transition-colors shrink-0"
@@ -84,9 +84,9 @@ export default function CarritoPage() {
                       <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                   </div>
-                  
+
                   {item.stock <= 5 && (
-                    <p className="text-xs text-orange-600 font-medium mt-0.5">
+                    <p className="text-xs text-neutral-600 font-medium mt-0.5">
                       Solo {item.stock} disponibles
                     </p>
                   )}
@@ -94,8 +94,8 @@ export default function CarritoPage() {
 
                 {/* Control de Cantidad y Precio */}
                 <div className="flex items-center justify-between mt-auto pt-1">
-                  <div className="border border-gray-900 rounded-xs flex items-center h-8 bg-white">
-                    <button 
+                  <div className="border border-gray-900 rounded-lg flex items-center h-11 bg-white">
+                    <button
                       type="button"
                       className="px-2.5 h-full flex items-center justify-center text-gray-800 hover:bg-gray-100 disabled:opacity-30 text-xs font-semibold"
                       onClick={() => updateQuantity(item.productId, item.quantity - 1)}
@@ -107,7 +107,7 @@ export default function CarritoPage() {
                     <span className="px-2 text-xs sm:text-sm font-bold text-black min-w-[1.75rem] text-center">
                       {item.quantity}
                     </span>
-                    <button 
+                    <button
                       type="button"
                       className="px-2.5 h-full flex items-center justify-center text-gray-800 hover:bg-gray-100 disabled:opacity-30 text-sm font-semibold"
                       onClick={() => updateQuantity(item.productId, item.quantity + 1)}
@@ -129,9 +129,9 @@ export default function CarritoPage() {
 
         {/* Resumen del pedido */}
         <div className="w-full lg:w-96 flex-shrink-0">
-          <div className="bg-white border border-gray-200 rounded-xl p-6 sticky top-24 shadow-xs">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 lg:sticky lg:top-40 shadow-xs">
             <div className="flex justify-between items-baseline mb-4 pb-3 border-b border-gray-900">
-              <span className="text-lg font-bold text-black">Total estimado</span>
+              <span className="text-lg font-bold text-black">Subtotal</span>
               <span className="text-2xl font-black text-black">Q {getTotal().toFixed(2)}</span>
             </div>
 
@@ -143,7 +143,7 @@ export default function CarritoPage() {
               <Link href="/checkout" className="block">
                 <button
                   type="button"
-                  className="w-full bg-white hover:bg-gray-50 text-black border-2 border-black rounded-full py-3.5 font-bold text-sm sm:text-base text-center transition-all shadow-xs cursor-pointer"
+                  className="w-full bg-primary hover:bg-zinc-800 text-white rounded-lg py-3.5 font-bold text-sm sm:text-base text-center transition-all shadow-xs cursor-pointer"
                 >
                   Finalizar compra
                 </button>
@@ -151,7 +151,7 @@ export default function CarritoPage() {
               <Link href="/productos" className="block">
                 <button
                   type="button"
-                  className="w-full bg-black hover:bg-zinc-800 text-white rounded-full py-3.5 font-bold text-sm sm:text-base text-center transition-all shadow-xs cursor-pointer"
+                  className="w-full bg-white hover:bg-gray-50 text-primary border border-gray-300 rounded-lg py-3.5 font-bold text-sm sm:text-base text-center transition-all shadow-xs cursor-pointer"
                 >
                   Seguir comprando
                 </button>
@@ -159,7 +159,7 @@ export default function CarritoPage() {
             </div>
 
             <div className="flex items-center justify-center gap-1.5 text-xs text-gray-700 font-medium pt-2 border-t border-gray-100">
-              <span>🔒 Pago seguro</span>
+              <span>Pago contra entrega</span>
             </div>
           </div>
         </div>

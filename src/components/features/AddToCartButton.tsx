@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { useCartStore } from '@/store/useCartStore';
 import { Product } from '@/types';
 import { ShoppingCart, Check } from 'lucide-react';
+import { trackMetaEvent } from '@/lib/metaPixel';
 
 export const AddToCartButton = ({ product }: { product: Product }) => {
   const [quantity, setQuantity] = useState(1);
@@ -16,7 +17,7 @@ export const AddToCartButton = ({ product }: { product: Product }) => {
 
   const handleAdd = () => {
     if (product.stock <= 0) return;
-    
+
     addItem({
       productId: product.id,
       slug: product.slug,
@@ -26,14 +27,22 @@ export const AddToCartButton = ({ product }: { product: Product }) => {
       stock: product.stock,
       quantity,
     });
-    
+
+    trackMetaEvent('AddToCart', {
+      content_ids: [product.id],
+      content_name: product.name,
+      content_type: 'product',
+      value: parseFloat(product.price) * quantity,
+      currency: 'GTQ',
+    });
+
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
 
   const handleBuyNow = () => {
     if (product.stock <= 0) return;
-    
+
     setItem({
       productId: product.id,
       slug: product.slug,
@@ -43,7 +52,7 @@ export const AddToCartButton = ({ product }: { product: Product }) => {
       stock: product.stock,
       quantity,
     });
-    
+
     router.push('/checkout');
   };
 
@@ -62,9 +71,9 @@ export const AddToCartButton = ({ product }: { product: Product }) => {
         <div className="flex items-center space-x-2">
           <span className="text-gray-700 font-medium text-xs sm:text-sm">Cantidad:</span>
           <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white shadow-2xs">
-            <button 
+            <button
               type="button"
-              className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition-colors font-medium text-base"
+              className="w-11 h-11 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition-colors font-medium text-base"
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
               disabled={quantity <= 1}
               aria-label="Disminuir cantidad"
@@ -72,9 +81,9 @@ export const AddToCartButton = ({ product }: { product: Product }) => {
               -
             </button>
             <span className="px-3 py-0.5 border-x border-gray-200 min-w-[2.2rem] text-center font-semibold text-xs sm:text-sm">{quantity}</span>
-            <button 
+            <button
               type="button"
-              className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition-colors font-medium text-base"
+              className="w-11 h-11 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition-colors font-medium text-base"
               onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
               disabled={quantity >= product.stock}
               aria-label="Aumentar cantidad"
@@ -88,15 +97,15 @@ export const AddToCartButton = ({ product }: { product: Product }) => {
             ¡Últimas {product.stock} disponibles!
           </span>
         ) : (
-          <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+          <span className="text-xs font-medium text-neutral-600 bg-neutral-50 px-2 py-1 rounded-md border border-neutral-100 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-pulse"></span>
             En existencia
           </span>
         )}
       </div>
-      
+
       {/* Botones de Compra: Lado a lado en móvil y escritorio para no empujar la vista */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
         {/* Botón 1: Comprar Ahora */}
                 <Button
                   type="button"
@@ -110,19 +119,19 @@ export const AddToCartButton = ({ product }: { product: Product }) => {
                 </Button>
 
         {/* Botón 2: Agregar al carrito */}
-        <Button 
+        <Button
           type="button"
-          variant="outline" 
-          size="lg" 
-          fullWidth 
+          variant="outline"
+          size="lg"
+          fullWidth
           onClick={handleAdd}
           className={`border-gray-300 hover:bg-gray-50 text-gray-800 font-semibold py-3 sm:py-3.5 rounded-xl transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base px-2 ${
-            added ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : ''
+            added ? 'bg-neutral-50 border-neutral-500 text-neutral-700' : ''
           }`}
         >
           {added ? (
             <>
-              <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 animate-in zoom-in duration-150 flex-shrink-0" />
+              <Check className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-600 animate-in zoom-in duration-150 flex-shrink-0" />
               <span className="truncate">¡Agregado!</span>
             </>
           ) : (

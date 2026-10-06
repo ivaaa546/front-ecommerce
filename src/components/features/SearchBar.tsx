@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X } from 'lucide-react';
 import { fetcher } from '@/services/api';
 import { Product } from '@/types';
 import Link from 'next/link';
+import { trackMetaEvent } from '@/lib/metaPixel';
 
 export default function SearchBar() {
+  const inputId = useId();
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Product[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -58,6 +60,7 @@ export default function SearchBar() {
     e.preventDefault();
     setShowSuggestions(false);
     if (query.trim()) {
+      trackMetaEvent('Search', { search_string: query.trim() });
       router.push(`/productos?search=${encodeURIComponent(query.trim())}`);
     } else {
       router.push('/productos');
@@ -73,32 +76,33 @@ export default function SearchBar() {
 
   return (
     <form ref={wrapperRef} onSubmit={handleSearch} role="search" className="relative w-full z-50">
-      <label htmlFor="store-search-input" className="sr-only">
+      <label htmlFor={inputId} className="sr-only">
         Buscar productos en la tienda
       </label>
       <div className="relative">
         <input
-          id="store-search-input"
+          id={inputId}
           type="text"
           placeholder="Buscar productos..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.trim() && setShowSuggestions(true)}
+          onKeyDown={(event) => { if (event.key === 'Escape') setShowSuggestions(false); }}
           autoComplete="off"
-          className="w-full h-10 pl-11 pr-10 text-sm bg-gray-100 border border-transparent rounded-full focus:bg-white focus:border-accent focus:ring-2 focus:ring-accent/40 transition-all outline-none text-gray-900 placeholder-gray-500"
+          className="w-full h-12 pl-11 pr-10 text-sm bg-gray-100 border border-transparent rounded-lg focus:bg-white focus:border-accent focus:ring-2 focus:ring-accent/40 transition-all outline-none text-gray-900 placeholder-gray-500"
         />
-        <button 
-          type="submit" 
-          className="absolute inset-y-0 left-0 pl-4 flex items-center hover:text-accent focus:outline-none"
+        <button
+          type="submit"
+          className="absolute inset-y-0 left-0 pl-4 flex items-center hover:text-accent"
           aria-label="Buscar"
         >
           <Search className="w-4 h-4 text-gray-500 hover:text-accent transition-colors" aria-hidden="true" />
         </button>
         {query && (
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={handleClear}
-            className="absolute inset-y-0 right-0 pr-4 flex items-center focus:outline-none"
+            className="absolute inset-y-0 right-0 pr-4 flex items-center"
             aria-label="Limpiar búsqueda"
           >
             <X className="w-4 h-4 text-gray-400 hover:text-gray-600" aria-hidden="true" />
@@ -118,7 +122,7 @@ export default function SearchBar() {
             <ul className="max-h-[60vh] overflow-y-auto">
               {suggestions.map((product) => (
                 <li key={product.id}>
-                  <Link 
+                  <Link
                     href={`/${product.slug}`}
                     onClick={() => {
                       setShowSuggestions(false);
@@ -126,10 +130,10 @@ export default function SearchBar() {
                     }}
                     className="flex items-center gap-3 p-3 hover:bg-gray-50 border-b border-gray-50 last:border-0 transition-colors"
                   >
-                    <img 
-                      src={product.imageUrl} 
-                      alt={product.name} 
-                      className="w-10 h-10 object-cover rounded-md border border-gray-100" 
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-10 h-10 object-cover rounded-md border border-gray-100"
                     />
                     <div className="flex-1 min-w-0 text-left">
                       <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
@@ -139,8 +143,8 @@ export default function SearchBar() {
                 </li>
               ))}
               <li className="bg-gray-50 border-t border-gray-100">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="w-full p-3 text-sm text-center text-accent hover:text-primary font-medium transition-colors"
                 >
                   Ver todos los resultados

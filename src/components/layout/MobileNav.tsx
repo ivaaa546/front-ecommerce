@@ -83,6 +83,8 @@ export default function MobileNav({ categories, quickLinks = [], storeName = 'E-
 
       {/* Drawer Panel */}
       <div
+        ref={node => { node?.toggleAttribute('inert', !isOpen); }}
+        aria-hidden={!isOpen}
         className={`fixed inset-y-0 left-0 z-50 w-full max-w-xs bg-white shadow-2xl transform transition-transform duration-300 ease-out flex flex-col ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
@@ -95,9 +97,10 @@ export default function MobileNav({ categories, quickLinks = [], storeName = 'E-
           <Link
             href="/"
             onClick={() => setIsOpen(false)}
-            className="text-lg font-bold tracking-tight text-primary"
+            className="flex items-center"
+            aria-label={storeName}
           >
-            {storeName}
+            <img src="/logo.png?v=2" alt={storeName} className="h-8 sm:h-9 w-auto max-w-[160px] object-contain" />
           </Link>
           <button
             type="button"

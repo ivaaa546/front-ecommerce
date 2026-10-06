@@ -1,15 +1,15 @@
 import React from 'react';
 
-export const Badge: React.FC<{ children: React.ReactNode; variant?: 'success' | 'warning' | 'danger' | 'info' | 'default' }> = ({ 
-  children, 
-  variant = 'default' 
+export const Badge: React.FC<{ children: React.ReactNode; variant?: 'success' | 'warning' | 'danger' | 'info' | 'default' }> = ({
+  children,
+  variant = 'default'
 }) => {
   const variants = {
     default: 'bg-gray-100 text-gray-800',
-    success: 'bg-green-100 text-green-800',
-    warning: 'bg-yellow-100 text-yellow-800',
+    success: 'bg-neutral-100 text-neutral-800',
+    warning: 'bg-neutral-100 text-neutral-800',
     danger: 'bg-red-100 text-red-800',
-    info: 'bg-blue-100 text-blue-800'
+    info: 'bg-neutral-100 text-neutral-800'
   };
 
   return (

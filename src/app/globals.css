@@ -4,18 +4,18 @@
 
 @layer base {
   ::selection {
-    background-color: #8A6818;
+    background-color: #171717;
     color: #FFFFFF;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
-    caret-color: #8A6818;
+    caret-color: #171717;
   }
 
   /* Accessible default focus ring themed to the brand palette */
   :focus-visible {
-    outline: 2px solid #8A6818;
+    outline: 2px solid #171717;
     outline-offset: 2px;
   }
 }
@@ -33,4 +33,31 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+}
+
+@layer base {
+  html { scroll-padding-top: 10rem; }
+  a { text-underline-offset: 0.2em; }
+  input[type="checkbox"] { accent-color: #171717; }
+  * { scrollbar-color: #A3A3A3 #FAFAFA; scrollbar-width: thin; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .store-shell { @apply mx-auto w-full max-w-[1320px] px-5 sm:px-8; }
+  .section-heading { @apply text-2xl sm:text-3xl font-bold tracking-tight; }
+  .action-link { @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-white transition-colors hover:bg-neutral-700; }
+  .admin-surface table { @apply min-w-[640px] text-sm; }
+  .admin-surface th { @apply whitespace-nowrap font-medium text-neutral-500; }
+  .admin-surface td { @apply tabular-nums; }
+  .admin-surface h1 { @apply tracking-tight; }
+  .admin-surface input:not([type='checkbox']):not([type='file']), .admin-surface select, .admin-surface textarea { @apply min-h-12; }
+  .admin-surface select { @apply bg-white text-primary; }
 }

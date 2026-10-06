@@ -10,6 +10,7 @@ import MobileNav from './MobileNav';
 export default async function Navbar() {
   let categories: Category[] = [];
   let storeName = 'E-COMMERCE';
+  let logoUrl: string | null = null;
   let quickLinksActive = false;
   let quickLinks: any[] = [];
 
@@ -21,6 +22,7 @@ export default async function Navbar() {
     categories = catsRes;
     if (settingsRes) {
       if (settingsRes.storeName) storeName = settingsRes.storeName;
+      if (settingsRes.logoUrl) logoUrl = settingsRes.logoUrl;
       if (settingsRes.quickLinksActive !== undefined) quickLinksActive = settingsRes.quickLinksActive;
       if (settingsRes.quickLinks) quickLinks = settingsRes.quickLinks;
     }
@@ -33,10 +35,14 @@ export default async function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white shadow-xs">
       {/* Barra Principal: Logo + Buscador Central + Acciones */}
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4 md:gap-8">
+      <div className="store-shell h-20 flex items-center justify-between gap-4 md:gap-8">
         {/* Logo */}
-        <Link href="/" className="text-xl md:text-2xl font-bold tracking-tighter text-primary flex-shrink-0">
-          {storeName.toUpperCase()}
+        <Link href="/" className="flex items-center flex-shrink-0" aria-label={storeName}>
+          <img
+            src={`${logoUrl || '/logo.png'}?v=2`}
+            alt={storeName}
+            className="h-9 sm:h-10 md:h-12 w-auto max-w-[200px] md:max-w-[240px] object-contain object-left"
+          />
         </Link>
 
         {/* Barra de Búsqueda Centrada y espaciosa (Desktop) */}
@@ -46,16 +52,21 @@ export default async function Navbar() {
 
         {/* Actions (Mobile Nav Drawer + Cart) */}
         <div className="flex items-center space-x-1 md:space-x-4 flex-shrink-0">
-          <MobileNav categories={categories} quickLinks={quickLinks} storeName={storeName} />
+          <Link href="/productos" className="hidden lg:inline-flex min-h-11 items-center px-3 text-sm font-medium">Catálogo</Link>
+          <MobileNav categories={categories} quickLinks={quickLinksActive ? quickLinks : []} storeName={storeName} />
           <CartIcon />
         </div>
+      </div>
+
+      <div className="md:hidden px-4 pb-4">
+        <SearchBar />
       </div>
 
       {/* Sub-navbar: Categorías y Enlaces Rápidos (Solo Desktop - Blanco) */}
       {hasSubNav && (
         <div className="hidden md:block bg-white border-b border-gray-200 relative z-40">
-          <div className="container mx-auto px-4 h-11 flex items-center overflow-x-auto md:overflow-visible hide-scrollbar">
-            <NavbarCategories 
+          <div className="store-shell h-12 flex items-center overflow-x-auto md:overflow-visible hide-scrollbar">
+            <NavbarCategories
               categories={categories}
               quickLinks={quickLinks}
               quickLinksActive={quickLinksActive}

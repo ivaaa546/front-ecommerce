@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-06T02:10:30.456245+00:00",
+  "title": "Design System: E-commerce storefront and administration",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Primary black",
+        "tonalRamp": [
+          "#171717",
+          "#262626",
+          "#404040",
+          "#525252",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#f5f5f5"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Graphite accent",
+        "tonalRamp": [
+          "#171717",
+          "#262626",
+          "#404040",
+          "#525252",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#f5f5f5"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "White surface",
+        "tonalRamp": [
+          "#171717",
+          "#262626",
+          "#404040",
+          "#525252",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#f5f5f5"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Off-white ground",
+        "tonalRamp": [
+          "#171717",
+          "#262626",
+          "#404040",
+          "#525252",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#f5f5f5"
+        ]
+      },
+      "neutral-100": {
+        "role": "neutral",
+        "displayName": "Pale neutral",
+        "tonalRamp": [
+          "#171717",
+          "#262626",
+          "#404040",
+          "#525252",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#f5f5f5"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Hero heading",
+        "purpose": "36px base, 48px sm, 60px lg."
+      }
+    },
+    "shadows": [
+      {
+        "name": "generic-card",
+        "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        "purpose": "Shared generic Card resting shadow."
+      },
+      {
+        "name": "suggestions",
+        "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+        "purpose": "Search suggestions."
+      },
+      {
+        "name": "drawer",
+        "value": "0 25px 50px -12px rgb(0 0 0 / 0.25)",
+        "purpose": "Cart overlay panel."
+      }
+    ],
+    "motion": [
+      {
+        "name": "cart-translate",
+        "value": "300ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Cart opening and closing."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "Global preference override."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Shared Button.tsx variant; medium size.",
+      "html": "<button class=\"ds-button-primary\">Primary Button</button>",
+      "css": ".ds-button-primary{font-family:Inter,sans-serif;font-weight:600;border-radius:8px;height:48px;padding:8px 16px;cursor:pointer;transition:background-color .15s;background:#111111;color:#fff;border:none}.ds-button-primary:hover{background:#000}.ds-button-primary:focus-visible{outline:2px solid #171717;outline-offset:2px}.ds-button-primary:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Shared Button.tsx variant; medium size.",
+      "html": "<button class=\"ds-button-secondary\">Secondary Button</button>",
+      "css": ".ds-button-secondary{font-family:Inter,sans-serif;font-weight:600;border-radius:8px;height:48px;padding:8px 16px;cursor:pointer;transition:background-color .15s;background:#171717;color:#fff;border:none}.ds-button-secondary:hover{background:#404040}.ds-button-secondary:focus-visible{outline:2px solid #171717;outline-offset:2px}.ds-button-secondary:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Shared Button.tsx variant; medium size.",
+      "html": "<button class=\"ds-button-outline\">Outline Button</button>",
+      "css": ".ds-button-outline{font-family:Inter,sans-serif;font-weight:600;border-radius:8px;height:48px;padding:8px 16px;cursor:pointer;transition:background-color .15s;background:transparent;color:#111111;border:1px solid #d4d4d4}.ds-button-outline:hover{background:#f9fafb}.ds-button-outline:focus-visible{outline:2px solid #171717;outline-offset:2px}.ds-button-outline:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Shared Button.tsx variant; medium size.",
+      "html": "<button class=\"ds-button-danger\">Danger Button</button>",
+      "css": ".ds-button-danger{font-family:Inter,sans-serif;font-weight:600;border-radius:8px;height:48px;padding:8px 16px;cursor:pointer;transition:background-color .15s;background:#dc2626;color:#fff;border:none}.ds-button-danger:hover{background:#b91c1c}.ds-button-danger:focus-visible{outline:2px solid #171717;outline-offset:2px}.ds-button-danger:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Labeled Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Shared Input.tsx neutral field; associate error text in actual forms.",
+      "html": "<label class=\"ds-label\" for=\"ds-name\">Nombre</label><input id=\"ds-name\" class=\"ds-field\" placeholder=\"Nombre del producto\">",
+      "css": ".ds-label{display:block;font:500 14px/20px Inter,sans-serif;color:#374151;margin-bottom:8px}.ds-field{height:48px;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;background:white;color:#111827;font:14px Inter,sans-serif}.ds-field:focus{outline:none;border-color:transparent;box-shadow:0 0 0 2px #171717}.ds-field:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Product Card",
+      "kind": "card",
+      "refersTo": "product-card",
+      "description": "ProductCard.tsx; placeholder here marks where actual inventory photography belongs.",
+      "html": "<article class=\"ds-product\"><div class=\"ds-photo\">Fotograf\u00eda real</div><div class=\"ds-details\"><p class=\"ds-category\">Categor\u00eda</p><a href=\"#producto\">Nombre del producto</a><strong>Q 100.00</strong></div></article>",
+      "css": ".ds-product{max-width:280px;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;background:white;font:14px Inter,sans-serif;transition:border-color .15s}.ds-product:hover{border-color:#a3a3a3}.ds-photo{aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:24px;color:#737373}.ds-details{padding:16px;border-top:1px solid #f5f5f5}.ds-category{color:#737373;font-size:12px}.ds-details a{color:#111111;text-decoration:none;font-weight:500}.ds-details strong{display:block;margin-top:20px;font-size:18px;font-variant-numeric:tabular-nums}.ds-details a:focus-visible{outline:2px solid #171717;outline-offset:2px}"
+    },
+    {
+      "name": "Administration Navigation",
+      "kind": "nav",
+      "refersTo": "admin-navigation",
+      "description": "Graphite navigation with white current page.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Administraci\u00f3n\"><a class=\"ds-active\" aria-current=\"page\" href=\"#pedidos\">Pedidos</a><a href=\"#productos\">Productos</a></nav>",
+      "css": ".ds-nav{padding:12px;background:#171717;font:14px Inter,sans-serif}.ds-nav a{display:flex;align-items:center;min-height:48px;padding:0 16px;border-radius:8px;color:#d4d4d4;text-decoration:none;margin-bottom:4px}.ds-nav a:hover{background:#262626;color:white}.ds-nav a.ds-active{background:white;color:#111111;font-weight:600}.ds-nav a:focus-visible{outline:2px solid #171717;outline-offset:2px}"
+    },
+    {
+      "name": "Neutral Badge",
+      "kind": "chip",
+      "refersTo": "status-badge",
+      "description": "BadgeCard.tsx neutral success, warning and info variants; danger remains semantic red.",
+      "html": "<span class=\"ds-badge\">Estado real</span>",
+      "css": ".ds-badge{display:inline-flex;border-radius:9999px;padding:2px 10px;background:#f5f5f5;color:#262626;font:600 12px/16px Inter,sans-serif}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Tu pr\u00f3xima conexi\u00f3n",
+    "overview": "A clear, monochrome store pairs bold Inter headings with real product photography. White surfaces, a pale ground and restrained borders keep discovery and purchase legible. Administration uses the same controls with a graphite navigation rail and denser task content.\n\nThe approved conceptual composition establishes the direction; the implementation establishes the tokens below. Product photographs and configured banners retain their original colors. The palette is editable in code; no UI theme configurator is implemented.",
+    "keyCharacteristics": [
+      "Black actions and white surfaces.",
+      "Real product imagery and prices in quetzales.",
+      "Rounded product cards and restrained tonal depth.",
+      "Shared store and administration controls."
+    ],
+    "rules": [
+      {
+        "name": "The Monochrome Interface Rule",
+        "body": "Keep interface accents black and white while preserving original photo and banner colors and semantic red errors.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "**Do** reuse shared Button, Input and badge primitives and the feature ProductCard.",
+      "**Do** keep original merchandise and banner colors.",
+      "**Do** preserve labeled controls, visible focus, cart keyboard handling and reduced-motion behavior.",
+      "**Do** retain readable tables with horizontal scrolling on mobile."
+    ],
+    "donts": [
+      "**Don't** introduce blue interface accents; the approved palette is black and white.",
+      "**Don't** replace real products or orders with the conceptual image's sample content.",
+      "**Don't** imply that a theme configurator or a passing conceptual reproduction gate exists."
+    ]
+  }
+}

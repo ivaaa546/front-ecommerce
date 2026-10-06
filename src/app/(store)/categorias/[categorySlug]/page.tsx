@@ -13,7 +13,7 @@ export default async function CategoryPage({
 }) {
   const { categorySlug } = params;
   const { search } = searchParams;
-  
+
   let products: Product[] = [];
   let categories: Category[] = [];
 
@@ -24,7 +24,7 @@ export default async function CategoryPage({
 
     const qs = queryParams.toString();
     const endpoint = `/products${qs ? `?${qs}` : ''}`;
-    
+
     [products, categories] = await Promise.all([
       fetcher<Product[]>(endpoint),
       fetcher<Category[]>('/categories')
@@ -36,27 +36,27 @@ export default async function CategoryPage({
   const currentCategory = categories.find(c => c.slug === categorySlug);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="store-shell py-10 sm:py-14">
       <div className="flex flex-col md:flex-row gap-8">
-        
+
         {/* Sidebar Categorías */}
-        <aside className="w-full md:w-64 flex-shrink-0">
-          <div className="bg-white border border-gray-200 rounded-lg p-6 sticky top-24">
+        <aside className="w-full md:w-52 flex-shrink-0">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 md:sticky md:top-40">
             <h2 className="font-bold text-lg mb-4 text-primary">Categorías</h2>
             <ul className="space-y-2">
               <li>
-                <Link 
-                  href="/productos" 
-                  className={`block py-1 text-sm transition-colors hover:text-accent text-gray-600`}
+                <Link
+                  href="/productos"
+                  className={`block py-3 text-sm transition-colors hover:text-accent text-gray-600`}
                 >
                   Todos
                 </Link>
               </li>
               {categories.map((c) => (
                 <li key={c.id}>
-                  <Link 
+                  <Link
                     href={`/categorias/${c.slug}`}
-                    className={`block py-1 text-sm transition-colors hover:text-accent ${categorySlug === c.slug ? 'font-bold text-accent' : 'text-gray-600'}`}
+                    className={`block py-3 text-sm transition-colors hover:text-accent ${categorySlug === c.slug ? 'font-bold text-accent' : 'text-gray-600'}`}
                   >
                     {c.name}
                   </Link>
@@ -67,16 +67,16 @@ export default async function CategoryPage({
         </aside>
 
         {/* Grid Productos */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-primary">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary">
               {currentCategory?.name || 'Catálogo'}
             </h1>
             <p className="text-gray-500 mt-2">{products.length} productos encontrados en esta categoría.</p>
           </div>
 
           {products.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -90,7 +90,7 @@ export default async function CategoryPage({
             </div>
           )}
         </div>
-        
+
       </div>
     </div>
   );

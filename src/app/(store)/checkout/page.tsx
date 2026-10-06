@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { fetcher } from '@/services/api';
 import { CheckCircle } from 'lucide-react';
+import { trackMetaEvent } from '@/lib/metaPixel';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function CheckoutPage() {
   const [shippingCost, setShippingCost] = useState(30); // Default, luego se actualiza
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [orderNumber, setOrderNumber] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -40,10 +42,19 @@ export default function CheckoutPage() {
     }
   }, [items.length]);
 
+  useEffect(() => {
+    if (items.length > 0) {
+      trackMetaEvent('InitiateCheckout', { content_ids: items.map(item => item.productId), num_items: items.length, value: getTotal() + shippingCost, currency: 'GTQ' });
+    }
+  }, [items.length, shippingCost]);
+
+  useEffect(() => {
+    if (mounted && items.length === 0 && !isSuccess) router.replace('/carrito');
+  }, [mounted, items.length, isSuccess, router]);
+
   if (!mounted) return null;
 
   if (items.length === 0 && !isSuccess) {
-    router.push('/carrito');
     return null;
   }
 
@@ -79,13 +90,15 @@ export default function CheckoutPage() {
         paymentMethod: 'CASH_ON_DELIVERY',
       };
 
-      await fetcher('/orders', {
+      const order = await fetcher<{ orderNumber: string }>('/orders', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
 
-      clearCart();
+      setOrderNumber(order.orderNumber);
       setIsSuccess(true);
+      sessionStorage.setItem(`meta-purchase-value-${order.orderNumber}`, total.toString());
+      clearCart();
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error al procesar tu pedido. Intenta nuevamente.');
       setLoading(false);
@@ -118,71 +131,71 @@ export default function CheckoutPage() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-12 relative">
+    <div className="store-shell py-10 sm:py-14 relative">
       {/* Modal de Éxito */}
       {isSuccess && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-10 h-10 text-green-600" />
+        <div className="relative flex items-center justify-center mb-8">
+          <div className="bg-white rounded-xl border border-neutral-200 max-w-xl w-full p-8 text-center animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-10 h-10 text-neutral-600" />
             </div>
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-3">¡Pedido Confirmado!</h2>
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-3">¡Pedido recibido!</h2>
             <p className="text-gray-500 mb-8 leading-relaxed">
-              Gracias por tu compra. Te contactaremos pronto para organizar el envío de tu paquete.
+              Tu pedido {orderNumber} ha sido registrado. Te contactaremos pronto para organizar el envío de tu paquete.
             </p>
-            <Button onClick={() => router.push('/')} fullWidth size="lg" className="rounded-xl py-6 text-base shadow-md hover:shadow-lg transition-all">
+            <Button onClick={() => router.push('/')} fullWidth size="lg" className="rounded-lg py-6 text-base transition-all">
               Volver al inicio
             </Button>
           </div>
         </div>
       )}
 
-      <h1 className="text-3xl font-bold text-primary mb-8 text-center">Checkout</h1>
+      <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-primary mb-8">Finalizar compra</h1>
 
-      <div className="flex flex-col lg:flex-row gap-8 max-w-6xl mx-auto">
+      {!isSuccess && <div className="flex flex-col lg:flex-row gap-8 max-w-6xl mx-auto">
         <form id="checkout-form" onSubmit={handleSubmit} className="flex-1 bg-white border border-gray-200 rounded-lg p-6 md:p-8">
-          <h2 className="text-xl font-bold mb-6 text-primary border-b pb-2">1. Datos Personales</h2>
+          <h2 className="text-xl font-bold mb-6 text-primary border-b pb-2">Datos personales</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <Input 
-              label="Nombre *" 
-              name="firstName" 
-              required 
+            <Input
+              label="Nombre *"
+              name="firstName"
+              required
               autoComplete="given-name"
               placeholder="Ej. Juan"
-              value={formData.firstName} 
-              onChange={handleChange} 
+              value={formData.firstName}
+              onChange={handleChange}
             />
-            <Input 
-              label="Apellido *" 
-              name="lastName" 
-              required 
+            <Input
+              label="Apellido *"
+              name="lastName"
+              required
               autoComplete="family-name"
               placeholder="Ej. Pérez"
-              value={formData.lastName} 
-              onChange={handleChange} 
+              value={formData.lastName}
+              onChange={handleChange}
             />
-            <Input 
-              label="Teléfono *" 
-              name="phone" 
-              type="tel" 
-              required 
+            <Input
+              label="Teléfono *"
+              name="phone"
+              type="tel"
+              required
               autoComplete="tel"
               placeholder="Ej. 55554444"
-              value={formData.phone} 
-              onChange={handleChange} 
+              value={formData.phone}
+              onChange={handleChange}
             />
-            <Input 
-              label="Correo electrónico (opcional)" 
-              name="email" 
-              type="email" 
+            <Input
+              label="Correo electrónico (opcional)"
+              name="email"
+              type="email"
               autoComplete="email"
               placeholder="juan@ejemplo.com"
-              value={formData.email} 
-              onChange={handleChange} 
+              value={formData.email}
+              onChange={handleChange}
             />
           </div>
 
-          <h2 className="text-xl font-bold mb-6 text-primary border-b pb-2">2. Dirección de Entrega</h2>
+          <h2 className="text-xl font-bold mb-6 text-primary border-b pb-2">Dirección de entrega</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="w-full flex flex-col space-y-1">
               <label htmlFor="checkout-department" className="text-sm font-medium text-gray-700">
@@ -195,7 +208,7 @@ export default function CheckoutPage() {
                 value={formData.department}
                 onChange={handleChange}
                 autoComplete="address-level1"
-                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                className="flex h-12 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
               >
                 <option value="">Selecciona un departamento...</option>
                 {DEPARTAMENTOS_GUATEMALA.map((dep) => (
@@ -244,7 +257,7 @@ export default function CheckoutPage() {
         </form>
 
         <div className="w-full lg:w-96 flex-shrink-0">
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 sticky top-24">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 lg:sticky lg:top-40">
             <h2 className="text-lg font-bold text-primary mb-4">Resumen del Pedido</h2>
             <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2">
               {items.map(item => (
@@ -267,18 +280,18 @@ export default function CheckoutPage() {
                 <span>Envío</span>
                 <span>{shippingCost === 0 ? 'Gratis' : `Q ${shippingCost.toFixed(2)}`}</span>
               </div>
-              <div className="flex justify-between font-bold text-xl text-primary mt-4 pt-4 border-t border-gray-200">
+              <div className="flex justify-between font-bold text-xl text-primary tabular-nums mt-4 pt-4 border-t border-gray-200">
                 <span>Total a Pagar</span>
                 <span>Q {total.toFixed(2)}</span>
               </div>
             </div>
 
             <div className="mt-6 space-y-4">
-              <div className="bg-amber-50 border border-amber-200/80 text-amber-900 text-xs p-3.5 rounded-lg space-y-1">
+              <div className="bg-neutral-50 border border-neutral-200/80 text-neutral-900 text-xs p-3.5 rounded-lg space-y-1">
                 <p className="font-semibold flex items-center gap-1.5 text-sm">
                   <span>Pago contra entrega garantizado</span>
                 </p>
-                <p className="text-amber-800">
+                <p className="text-neutral-800">
                   Pagarás el total exacto en efectivo al recibir tu paquete. Envío de 1 a 3 días hábiles.
                 </p>
               </div>
@@ -295,7 +308,7 @@ export default function CheckoutPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

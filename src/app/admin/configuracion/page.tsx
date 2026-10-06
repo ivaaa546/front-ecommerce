@@ -11,6 +11,9 @@ export default function AdminSettings() {
 
   const [shipping, setShipping] = useState({ type: 'FIXED', amount: '30' });
   const [storeName, setStoreName] = useState('E-COMMERCE');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [metaPixelId, setMetaPixelId] = useState('');
   const [banners, setBanners] = useState<{ imageUrl: string, text: string, linkUrl: string }[]>([]);
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
 
@@ -20,6 +23,8 @@ export default function AdminSettings() {
   useEffect(() => {
     fetcher<any>('/settings').then(res => {
       if (res.storeName) setStoreName(res.storeName);
+      if (res.logoUrl) setLogoUrl(res.logoUrl);
+      if (res.metaPixelId) setMetaPixelId(res.metaPixelId);
       if (res.quickLinksActive !== undefined) setQuickLinksActive(res.quickLinksActive);
       if (res.quickLinks) setQuickLinks(res.quickLinks);
 
@@ -80,6 +85,41 @@ export default function AdminSettings() {
     }
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('kind', 'logo');
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/uploads`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
+      if (!response.ok) throw new Error('No se pudo subir el logo');
+      const data = await response.json();
+      setLogoUrl(data.url);
+      await fetcher('/admin/settings/logo', { method: 'PUT', requireAuth: true, body: JSON.stringify({ logoUrl: data.url }) });
+      alert('Logo actualizado correctamente');
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    setSaving(true);
+    try {
+      await fetcher('/admin/settings/logo', { method: 'PUT', requireAuth: true, body: JSON.stringify({ logoUrl: '' }) });
+      setLogoUrl('');
+      alert('Logo eliminado. Se mostrará el nombre de la tienda.');
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSaveShipping = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -90,6 +130,23 @@ export default function AdminSettings() {
         body: JSON.stringify({ type: shipping.type, amount: parseFloat(shipping.amount) }),
       });
       alert('Envío actualizado correctamente');
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveMetaPixel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await fetcher('/admin/settings/meta-pixel', {
+        method: 'PUT',
+        requireAuth: true,
+        body: JSON.stringify({ metaPixelId }),
+      });
+      alert('Meta Pixel actualizado correctamente');
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -108,7 +165,7 @@ export default function AdminSettings() {
         requireAuth: true,
         body: JSON.stringify({ banners: validBanners }),
       });
-      alert('Slider actualizado correctamente');
+      alert('Campañas actualizadas correctamente');
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -172,21 +229,29 @@ export default function AdminSettings() {
     <div className="max-w-4xl space-y-8 pb-12">
       <h1 className="text-3xl font-bold text-primary mb-8">Configuración de la Tienda</h1>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 md:p-8">
+      <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
         <h2 className="text-xl font-bold text-primary mb-6 border-b pb-2">Configuración General</h2>
         <form onSubmit={handleSaveStoreName} className="space-y-4 max-w-md">
-          <Input
-            label="Nombre de la Tienda"
-            type="text"
-            required
-            value={storeName}
-            onChange={e => setStoreName(e.target.value)}
-          />
+          <Input label="Nombre de la Tienda" type="text" required value={storeName} onChange={e => setStoreName(e.target.value)} />
           <Button type="submit" disabled={saving}>Guardar Nombre</Button>
         </form>
+        <div className="mt-8 border-t border-gray-100 pt-6 max-w-md">
+          <label className="text-sm font-medium text-gray-700">Logo de la tienda</label>
+          <p className="mt-1 text-xs leading-relaxed text-gray-500">Se adapta a logos horizontales, cuadrados o verticales. Dimensión recomendada: 600 × 150 px para logos horizontales. En escritorio reserva hasta 240 × 56 px. Usa PNG o SVG con fondo transparente.</p>
+          <div className="mt-4 flex items-center gap-4">
+            <div className="flex h-16 w-36 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-2">
+              {logoUrl ? <img src={logoUrl} alt="Vista previa del logo" className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-gray-400">Sin logo</span>}
+            </div>
+            <div className="flex flex-col gap-2">
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={handleLogoUpload} disabled={uploadingLogo} className="max-w-[220px] text-sm" />
+              {logoUrl && <Button type="button" variant="outline" size="sm" onClick={handleRemoveLogo} disabled={saving}>Usar nombre en su lugar</Button>}
+            </div>
+          </div>
+          {uploadingLogo && <p className="mt-2 text-xs text-gray-500">Subiendo logo...</p>}
+        </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 md:p-8">
+      <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
         <div className="flex justify-between items-center mb-6 border-b pb-2">
           <h2 className="text-xl font-bold text-primary">Enlaces Rápidos (Debajo del buscador)</h2>
           <Button variant="outline" size="sm" onClick={addQuickLink}>+ Añadir Enlace</Button>
@@ -208,7 +273,7 @@ export default function AdminSettings() {
 
           <div className="space-y-4">
             {quickLinks.map((link, idx) => (
-              <div key={idx} className="flex gap-4 items-start p-4 border border-gray-100 bg-gray-50 rounded-md">
+              <div key={idx} className="flex gap-4 items-start p-4 border border-gray-100 bg-gray-50 rounded-lg">
                 <div className="flex-1 space-y-4">
                   <Input
                     label="Texto (Ej. Ofertas)"
@@ -232,13 +297,13 @@ export default function AdminSettings() {
         </form>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 md:p-8">
+      <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
         <h2 className="text-xl font-bold text-primary mb-6 border-b pb-2">Costo de Envío</h2>
         <form onSubmit={handleSaveShipping} className="space-y-4 max-w-md">
           <div className="flex flex-col space-y-1">
             <label className="text-sm font-medium text-gray-700">Tipo de envío</label>
             <select
-              className="h-10 w-full rounded-md border border-gray-300 px-3 py-2"
+              className="h-10 w-full rounded-lg border border-gray-300 px-3 py-2"
               value={shipping.type}
               onChange={e => setShipping({ ...shipping, type: e.target.value })}
             >
@@ -260,15 +325,25 @@ export default function AdminSettings() {
         </form>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 md:p-8">
+      <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
+        <h2 className="text-xl font-bold text-primary mb-2">Seguimiento de anuncios</h2>
+        <p className="mb-6 max-w-2xl text-sm leading-relaxed text-neutral-600">Conecta Meta Pixel para medir visitas, productos vistos, búsquedas, carritos, checkout y compras. Déjalo vacío para desactivar el seguimiento.</p>
+        <form onSubmit={handleSaveMetaPixel} className="space-y-4 max-w-md">
+          <Input label="ID del Pixel de Meta" value={metaPixelId} onChange={e => setMetaPixelId(e.target.value)} placeholder="Ej. 123456789012345" inputMode="numeric" />
+          <Button type="submit" disabled={saving}>Guardar Pixel</Button>
+        </form>
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
         <div className="flex justify-between items-center mb-6 border-b pb-2">
-          <h2 className="text-xl font-bold text-primary">Slider Principal (Banners)</h2>
-          <Button variant="outline" size="sm" onClick={addBanner}>+ Añadir Slide</Button>
+          <h2 className="text-xl font-bold text-primary">Campañas de la portada</h2>
+          <Button variant="outline" size="sm" onClick={addBanner}>+ Añadir campaña</Button>
         </div>
 
+        <p className="mb-6 text-sm leading-relaxed text-neutral-600">Cada campaña puede tener una imagen, un título y un enlace a cualquier categoría o producto. La portada muestra una campaña principal y hasta dos campañas adicionales al lado. Con varias, el cliente puede cambiar la principal usando las flechas. No cambian automáticamente. Para aprovechar el espacio, utiliza imágenes horizontales de aproximadamente 2:1.</p>
         <form onSubmit={handleSaveBanners} className="space-y-8">
           {banners.map((banner, idx) => (
-            <div key={idx} className="p-4 border border-gray-200 bg-gray-50 rounded-lg relative">
+            <div key={idx} className="p-4 border border-gray-200 bg-gray-50 rounded-xl relative">
               <button
                 type="button"
                 onClick={() => removeBanner(idx)}
@@ -277,7 +352,7 @@ export default function AdminSettings() {
                 Eliminar
               </button>
 
-              <h3 className="font-semibold text-gray-700 mb-4">Slide #{idx + 1}</h3>
+              <h3 className="font-semibold text-gray-700 mb-4">Campaña #{idx + 1}</h3>
 
               <div className="space-y-4">
                 <Input
@@ -296,7 +371,7 @@ export default function AdminSettings() {
                 <div className="flex flex-col space-y-2 pt-2">
                   <label className="text-sm font-medium text-gray-700">Imagen de fondo</label>
                   <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, idx)} disabled={uploadingIdx === idx} />
-                  {uploadingIdx === idx && <span className="text-xs text-blue-500">Subiendo imagen...</span>}
+                  {uploadingIdx === idx && <span className="text-xs text-neutral-500">Subiendo imagen...</span>}
                   {banner.imageUrl && (
                     <div className="mt-2 relative h-32 bg-gray-100 border rounded overflow-hidden">
                       <img src={banner.imageUrl} alt={`Slide ${idx + 1}`} className="h-full w-full object-cover" />
@@ -312,7 +387,7 @@ export default function AdminSettings() {
           )}
 
           <div className="pt-4 border-t border-gray-200">
-            <Button type="submit" disabled={saving || uploadingIdx !== null}>Guardar Slider</Button>
+            <Button type="submit" disabled={saving || uploadingIdx !== null}>Guardar campañas</Button>
           </div>
         </form>
       </div>

@@ -1,70 +1,21 @@
-import React from 'react';
 import Link from 'next/link';
+import { ArrowUpRight } from 'lucide-react';
 import { Product } from '@/types';
-
-export const ProductCard = ({ product }: { product: Product }) => {
-  const price = parseFloat(product.price);
-  const prevPrice = product.previousPrice ? parseFloat(product.previousPrice) : null;
-  const isDiscounted = prevPrice !== null && prevPrice > price;
-
-  return (
-    <article className="overflow-hidden group flex flex-col h-full bg-white border border-gray-200/90 rounded-xl hover:border-gray-300 hover:shadow-md transition-all duration-200">
-      <Link 
-        href={`/${product.slug}`} 
-        className="block relative h-40 sm:h-44 md:h-48 w-full overflow-hidden bg-white focus:outline-none flex items-center justify-center p-4"
-        tabIndex={-1}
-        aria-hidden="true"
-      >
-        <img 
-          src={product.imageUrl} 
-          alt="" 
-          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
-        />
-        
-        {/* Badges */}
-        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
-          {product.stock <= 0 ? (
-            <span className="bg-primary/90 backdrop-blur-xs text-white text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wider uppercase">
-              Agotado
-            </span>
-          ) : isDiscounted ? (
-            <span className="bg-amber-700 text-white text-[11px] font-bold px-2 py-0.5 rounded-md tracking-wide">
-              Oferta
-            </span>
-          ) : null}
-        </div>
-      </Link>
-      
-      <div className="p-4 flex flex-col flex-grow">
-        {product.category?.name && (
-          <span className="text-xs font-medium text-gray-500 mb-1">{product.category.name}</span>
-        )}
-        <h3 className="font-semibold text-base text-primary line-clamp-2 leading-snug group-hover:text-accent transition-colors">
-          <Link href={`/${product.slug}`} className="focus:outline-none focus-visible:underline">
-            {product.name}
-          </Link>
-        </h3>
-        
-        <div className="mt-auto pt-3 flex items-baseline justify-between gap-2 border-t border-gray-100">
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg font-bold text-primary">Q {price.toFixed(2)}</span>
-            {isDiscounted && (
-              <span className="text-xs text-gray-500 line-through">
-                Q {prevPrice.toFixed(2)}
-              </span>
-            )}
-          </div>
-          <Link 
-            href={`/${product.slug}`}
-            className="text-xs font-semibold text-accent hover:underline flex items-center"
-            tabIndex={-1}
-            aria-hidden="true"
-          >
-            Ver más &rarr;
-          </Link>
-        </div>
+export const ProductCard = ({ product, horizontal = false }: { product: Product; horizontal?: boolean }) => {
+  const price = Number(product.price);
+  const previous = Number(product.previousPrice);
+  return <article className={`group flex h-full flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white transition-colors hover:border-neutral-400 ${horizontal ? 'md:flex-row md:items-center' : ''}`}>
+    <Link href={`/${product.slug}`} className={`relative flex aspect-square items-center justify-center p-6 sm:p-8 ${horizontal ? 'md:w-2/5 md:shrink-0' : ''}`} tabIndex={-1} aria-hidden="true">
+      <img src={product.imageUrl} alt="" className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105 motion-reduce:transform-none" loading="lazy" />
+      {(product.stock <= 0 || previous > price) && <span className="absolute left-3 top-3 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-white">{product.stock <= 0 ? 'Agotado' : 'Oferta'}</span>}
+    </Link>
+    <div className={`flex flex-1 flex-col gap-2 border-t border-neutral-100 p-4 sm:p-5 ${horizontal ? 'md:border-t-0 md:p-6' : ''}`}>
+      <p className="text-xs text-neutral-500">{product.category?.name}</p>
+      <h3 className="text-sm sm:text-base font-medium leading-relaxed line-clamp-2"><Link href={`/${product.slug}`}>{product.name}</Link></h3>
+      <div className="mt-auto flex flex-wrap items-end justify-between gap-2 pt-3">
+        <div className="flex flex-wrap items-baseline gap-x-2 tabular-nums"><span className="text-lg sm:text-xl font-bold">Q {price.toLocaleString('es-GT', { minimumFractionDigits: 2 })}</span>{previous > price && <span className="text-xs text-neutral-500 line-through">Q {previous.toFixed(2)}</span>}</div>
+        <ArrowUpRight className="h-4 w-4 text-neutral-500" aria-hidden="true" />
       </div>
-    </article>
-  );
+    </div>
+  </article>;
 };

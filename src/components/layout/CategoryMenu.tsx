@@ -16,7 +16,7 @@ export default function CategoryMenu({ categories }: CategoryMenuProps) {
 
   return (
     <div className="hidden md:flex items-center relative group h-full">
-      <button 
+      <button
         type="button"
         className="h-full flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-primary transition-colors py-2 focus:outline-none"
       >
@@ -27,7 +27,7 @@ export default function CategoryMenu({ categories }: CategoryMenuProps) {
 
       {/* Mega Menú */}
       <div className="absolute top-full left-0 w-[800px] bg-white border border-gray-100 shadow-xl rounded-b-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top translate-y-1 group-hover:translate-y-0 flex z-50 overflow-hidden" style={{ minHeight: '400px' }}>
-        
+
         {/* Lado izquierdo: Lista de categorías principales */}
         <div className="w-1/3 bg-gray-50 border-r border-gray-100 flex flex-col py-2 overflow-y-auto">
           {categories.map((cat) => (
@@ -36,8 +36,8 @@ export default function CategoryMenu({ categories }: CategoryMenuProps) {
               onMouseEnter={() => setActiveCategory(cat)}
               className={`flex items-center justify-between px-6 py-3 cursor-pointer transition-colors ${
                 activeCategory?.id === cat.id
-                  ? 'bg-white text-accent border-l-4 border-accent font-medium'
-                  : 'text-gray-600 hover:bg-gray-100 border-l-4 border-transparent'
+                  ? 'bg-white text-accent border-l border-neutral-200 font-medium'
+                  : 'text-gray-600 hover:bg-gray-100 border-l border-transparent'
               }`}
             >
               <span className="text-sm">{cat.name}</span>
@@ -51,7 +51,7 @@ export default function CategoryMenu({ categories }: CategoryMenuProps) {
           {activeCategory ? (
             <div className="animate-in fade-in duration-200">
               <div className="mb-6 pb-4 border-b border-gray-100">
-                <Link 
+                <Link
                   href={`/categorias/${activeCategory.slug}`}
                   className="inline-flex items-center text-2xl font-bold text-gray-900 hover:text-accent transition-colors"
                 >
@@ -69,7 +69,7 @@ export default function CategoryMenu({ categories }: CategoryMenuProps) {
                           {subCat.name} <ChevronRight className="w-4 h-4 ml-1" />
                         </h4>
                       </Link>
-                      
+
                       {subCat.subCategories && subCat.subCategories.length > 0 && (
                         <ul className="space-y-3">
                           {subCat.subCategories.map(item => (

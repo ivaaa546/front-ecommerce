@@ -50,7 +50,7 @@ export default function AdminOrderDetail({ params }: { params: { id: string } })
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <Link href="/admin/pedidos" className="text-sm text-gray-500 hover:text-accent">&larr; Volver a Pedidos</Link>
           <h1 className="text-3xl font-bold text-primary mt-2">Pedido {order.orderNumber}</h1>
@@ -66,22 +66,22 @@ export default function AdminOrderDetail({ params }: { params: { id: string } })
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
           <h2 className="font-bold text-lg mb-4 text-primary">Cliente</h2>
           <p><strong>Nombre:</strong> {order.customerName}</p>
           <p><strong>Teléfono:</strong> {order.customerPhone}</p>
           {order.customerEmail && <p><strong>Email:</strong> {order.customerEmail}</p>}
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
           <h2 className="font-bold text-lg mb-4 text-primary">Dirección de Entrega</h2>
-          <p><strong>Depto/Muni:</strong> {order.addressDepartment}, {order.addressMunicipality}</p>
-          <p><strong>Dirección:</strong> {order.addressExact}</p>
-          {order.addressReference && <p><strong>Referencia:</strong> {order.addressReference}</p>}
+          <p><strong>Depto/Muni:</strong> {order.department}, {order.municipality}</p>
+          <p><strong>Dirección:</strong> {order.exactAddress}</p>
+          {order.reference && <p><strong>Referencia:</strong> {order.reference}</p>}
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
         <table className="w-full text-left">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
@@ -95,9 +95,9 @@ export default function AdminOrderDetail({ params }: { params: { id: string } })
             {order.items.map((item: any) => (
               <tr key={item.id} className="border-b border-gray-100 last:border-0">
                 <td className="p-4">{item.productName}</td>
-                <td className="p-4">Q {parseFloat(item.priceAtTime).toFixed(2)}</td>
+                <td className="p-4">Q {parseFloat(item.unitPrice).toFixed(2)}</td>
                 <td className="p-4">{item.quantity}</td>
-                <td className="p-4 text-right">Q {(parseFloat(item.priceAtTime) * item.quantity).toFixed(2)}</td>
+                <td className="p-4 text-right">Q {(parseFloat(item.unitPrice) * item.quantity).toFixed(2)}</td>
               </tr>
             ))}
           </tbody>

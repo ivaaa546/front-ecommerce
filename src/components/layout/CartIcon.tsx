@@ -7,7 +7,7 @@ import { useCartStore } from '@/store/useCartStore';
 export default function CartIcon() {
   const [mounted, setMounted] = useState(false);
   const openCart = useCartStore((state) => state.openCart);
-  const count = useCartStore((state) => 
+  const count = useCartStore((state) =>
     state.items.reduce((acc, item) => acc + item.quantity, 0)
   );
 
@@ -27,7 +27,7 @@ export default function CartIcon() {
       >
         <ShoppingCart className="w-6 h-6" aria-hidden="true" />
         {displayCount > 0 && (
-        <span 
+        <span
           className="absolute top-1 right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-primary rounded-full min-w-[1.25rem] h-5"
           aria-hidden="true"
         >

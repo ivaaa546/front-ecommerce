@@ -7,6 +7,7 @@ import { ProductGallery } from '@/components/features/ProductGallery';
 import ShareProductButton from '@/components/features/ShareProductButton';
 import Link from 'next/link';
 import { ChevronRight, ShieldCheck, Truck } from 'lucide-react';
+import ViewContentTracker from '@/components/analytics/ViewContentTracker';
 
 export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
   let product: Product | null = null;
@@ -26,7 +27,8 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   const isDiscounted = previousPrice !== null && previousPrice > price;
 
   return (
-    <div className="container mx-auto px-4 py-4 md:py-8 max-w-6xl">
+    <div className="store-shell py-6 sm:py-10">
+      <ViewContentTracker productId={product.id} name={product.name} price={price} />
       {/* Breadcrumb Navigation */}
       <nav aria-label="Ruta de navegación" className="mb-3 md:mb-6 flex items-center gap-1.5 text-xs md:text-sm text-gray-500">
         <Link href="/" className="hover:text-primary transition-colors">
@@ -39,8 +41,8 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
         {product.category?.name && (
           <>
             <ChevronRight className="w-3.5 h-3.5 text-gray-400" aria-hidden="true" />
-            <Link 
-              href={`/categorias/${product.category.slug || ''}`} 
+            <Link
+              href={`/categorias/${product.category.slug || ''}`}
               className="hover:text-primary transition-colors"
             >
               {product.category.name}
@@ -54,15 +56,15 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
       </nav>
 
       {/* Main Product Card */}
-      <div className="bg-white border border-gray-200/90 rounded-2xl overflow-hidden shadow-xs">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-0">
-          
+      <div className="bg-white rounded-2xl overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-8">
+
           {/* Imagen de Producto */}
-          <div className="md:col-span-5 lg:col-span-5 bg-white relative border-b md:border-b-0 md:border-r border-gray-100 p-6 sm:p-10">
-            <div className="sticky top-12">
-              <ProductGallery 
-                images={product.images?.length > 0 ? product.images : [product.imageUrl]} 
-                productName={product.name} 
+          <div className="md:col-span-6 lg:col-span-6 bg-white relative border-b md:border-b-0 md:border-r border-gray-100 p-6 sm:p-10">
+            <div className="md:sticky md:top-40">
+              <ProductGallery
+                images={product.images?.length > 0 ? product.images : [product.imageUrl]}
+                productName={product.name}
               />
             </div>
             {product.stock <= 0 && (
@@ -75,12 +77,12 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
           </div>
 
           {/* Detalles de Producto */}
-          <div className="md:col-span-7 lg:col-span-7 p-4 sm:p-6 md:p-10 flex flex-col justify-between">
+          <div className="md:col-span-6 lg:col-span-6 p-4 sm:p-6 md:p-10 flex flex-col justify-between">
             <div>
               <h1 className="text-xl sm:text-2xl md:text-4xl font-extrabold text-primary mb-2 md:mb-4 leading-tight tracking-tight">
                 {product.name}
               </h1>
-              
+
               <div className="flex items-baseline gap-2.5 sm:gap-3 mb-3 md:mb-5">
                 <span className="text-2xl sm:text-3xl md:text-4xl font-black text-primary">
                   Q {price.toFixed(2)}
@@ -91,21 +93,21 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                   </span>
                 )}
                 {isDiscounted && (
-                  <span className="text-xs font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-neutral-800 bg-neutral-100/80 px-2 py-0.5 rounded-full">
                     Ahorras Q {(previousPrice - price).toFixed(2)}
                   </span>
                 )}
               </div>
-              
+
               <div className="text-xs sm:text-sm md:text-base text-gray-700 mb-3 md:mb-5 leading-relaxed">
                 <p className="whitespace-pre-line">{product.description}</p>
               </div>
-              
+
               <div className="text-xs text-gray-500 mb-3 md:mb-5 flex items-center gap-4 border-t border-gray-100 pt-2 md:pt-3">
                 <p>SKU: <span className="font-mono text-gray-700">{product.sku}</span></p>
               </div>
             </div>
-            
+
             {/* Acciones de compra y Garantías */}
             <div className="space-y-3 md:space-y-4 pt-3 md:pt-4 border-t border-gray-100">
               <AddToCartButton product={product} />
@@ -122,17 +124,17 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
               {/* Badges de Confianza */}
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-2.5 text-xs text-gray-600">
                 <div className="flex items-center gap-2.5">
-                  <Truck className="w-4 h-4 text-blue-600 flex-shrink-0" aria-hidden="true" />
+                  <Truck className="w-4 h-4 text-neutral-600 flex-shrink-0" aria-hidden="true" />
                   <span><strong>Envíos nacionales:</strong> Despachos a toda Guatemala.</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" aria-hidden="true" />
+                  <ShieldCheck className="w-4 h-4 text-neutral-600 flex-shrink-0" aria-hidden="true" />
                   <span><strong>Garantía de calidad:</strong> Inspeccionado antes del empaque.</span>
                 </div>
               </div>
             </div>
           </div>
-          
+
         </div>
       </div>
     </div>

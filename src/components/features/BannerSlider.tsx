@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface BannerItem {
   imageUrl: string;
@@ -12,88 +13,56 @@ interface BannerItem {
 export default function BannerSlider({ banners }: { banners: BannerItem[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const hasMultiple = banners.length > 1;
+  const changeSlide = (direction: number) => {
+    setCurrentIndex(current => (current + direction + banners.length) % banners.length);
+  };
 
   useEffect(() => {
-    if (banners.length <= 1 || isPaused) return;
-    
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % banners.length);
+    if (!hasMultiple || isPaused) return;
+    const interval = window.setInterval(() => {
+      setCurrentIndex(current => (current + 1) % banners.length);
     }, 5000);
-    
-    return () => clearInterval(interval);
-  }, [banners.length, isPaused]);
+    return () => window.clearInterval(interval);
+  }, [banners.length, hasMultiple, isPaused]);
 
-  if (!banners || banners.length === 0) return null;
+  if (!banners.length) return null;
 
-  return (
-    <section 
-      aria-label="Promociones y novedades"
-      className="relative w-full h-72 md:h-96 lg:h-[480px] bg-primary overflow-hidden"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onFocus={() => setIsPaused(true)}
-      onBlur={() => setIsPaused(false)}
-    >
-      {banners.map((banner, index) => {
-        const isActive = index === currentIndex;
-        const content = (
-          <div 
-            key={index}
-            className={`absolute inset-0 transition-opacity duration-700 ease-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
-            aria-hidden={!isActive}
-          >
-            <img 
-              src={banner.imageUrl} 
-              alt={banner.text || `Banner ${index + 1}`} 
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            {banner.text && <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />}
-            
-            {banner.text && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-md max-w-3xl leading-tight">
-                  {banner.text}
-                </h2>
-                {banner.linkUrl && (
-                  <span className="mt-6 inline-flex items-center gap-2 bg-white text-primary font-bold px-7 py-3 rounded-lg hover:bg-gray-100 transition-colors shadow-lg text-sm md:text-base">
-                    Explorar colección &rarr;
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        );
+  const index = currentIndex % banners.length;
+  const banner = banners[index];
+  const previews = banners.map((item, itemIndex) => ({ ...item, itemIndex }))
+    .filter(item => item.itemIndex !== index).slice(0, 2);
+  const campaignLabel = banner.text || `Campaña ${index + 1}`;
+  const campaignContent = <img src={banner.imageUrl} alt={campaignLabel} className="h-full w-full object-cover" fetchPriority={index === 0 ? 'high' : 'auto'} />;
 
-        if (banner.linkUrl && isActive) {
-          return (
-            <Link key={index} href={banner.linkUrl} className="block w-full h-full focus:outline-none focus-visible:ring-4 focus-visible:ring-accent">
-              {content}
-            </Link>
-          );
-        }
-
-        return content;
+  return <section aria-label="Campañas y categorías destacadas" className="space-y-3"
+    onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}
+    onFocusCapture={() => setIsPaused(true)} onBlurCapture={() => setIsPaused(false)}>
+    <div className="relative overflow-hidden rounded-2xl bg-white" onKeyDown={event => {
+      if (!hasMultiple) return;
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.preventDefault();
+        changeSlide(event.key === 'ArrowLeft' ? -1 : 1);
+      }
+    }}>
+      <div role="group" aria-roledescription={hasMultiple ? 'diapositiva' : undefined} aria-label={`${index + 1} de ${banners.length}`} className="aspect-[4/3] sm:aspect-[21/9] lg:aspect-[4/1] bg-neutral-100">
+        {banner.linkUrl ? <Link href={banner.linkUrl} className="block h-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2" aria-label={campaignLabel}>{campaignContent}</Link> : campaignContent}
+      </div>
+      {hasMultiple && <>
+        <button type="button" onClick={() => changeSlide(-1)} aria-label="Campaña anterior" className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100"><ArrowLeft className="h-5 w-5" aria-hidden="true" /></button>
+        <button type="button" onClick={() => changeSlide(1)} aria-label="Campaña siguiente" className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100"><ArrowRight className="h-5 w-5" aria-hidden="true" /></button>
+      </>}
+    </div>
+    {hasMultiple && <div className="flex items-center justify-center gap-1" role="group" aria-label="Elegir campaña">
+      {banners.map((_, slideIndex) => <button key={slideIndex} type="button" onClick={() => setCurrentIndex(slideIndex)} aria-label={`Ir a campaña ${slideIndex + 1} de ${banners.length}`} aria-current={slideIndex === index ? 'true' : undefined} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-neutral-100"><span aria-hidden="true" className={`h-2 rounded-full ${slideIndex === index ? 'w-6 bg-primary' : 'w-2 bg-neutral-400'}`} /></button>)}
+    </div>}
+    {previews.length > 0 && <div className="grid gap-3 sm:grid-cols-2">
+      {previews.map(item => {
+        const preview = <img src={item.imageUrl} alt={item.text || `Campaña ${item.itemIndex + 1}`} className="h-full w-full object-cover" loading="lazy" />;
+        const cardClass = 'relative block min-h-[110px] overflow-hidden rounded-xl bg-neutral-100 aspect-[3/1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2';
+        return item.linkUrl ? <Link key={item.itemIndex} href={item.linkUrl} className={cardClass} aria-label={item.text || `Campaña ${item.itemIndex + 1}`}>{preview}</Link> : <button key={item.itemIndex} type="button" onClick={() => setCurrentIndex(item.itemIndex)} className={cardClass} aria-label={`Ver ${item.text || `campaña ${item.itemIndex + 1}`}`}>{preview}</button>;
       })}
-
-      {/* Controles de paginación accesibles */}
-      {banners.length > 1 && (
-        <div className="absolute bottom-4 left-0 right-0 z-20 flex justify-center items-center gap-1">
-          {banners.map((_, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => setCurrentIndex(idx)}
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-full"
-              aria-label={`Ir al banner ${idx + 1} de ${banners.length}`}
-              aria-current={idx === currentIndex ? 'true' : 'false'}
-            >
-              <span className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                idx === currentIndex ? 'w-8 bg-white' : 'bg-white/50 hover:bg-white/80'
-              }`} />
-            </button>
-          ))}
-        </div>
-      )}
-    </section>
-  );
+    </div>}
+    <span className="sr-only" aria-live="polite" aria-atomic="true">Campaña {index + 1} de {banners.length}: {campaignLabel}</span>
+  </section>;
 }

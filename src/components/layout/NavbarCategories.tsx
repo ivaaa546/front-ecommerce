@@ -66,9 +66,9 @@ export default function NavbarCategories({
 
   return (
     <>
-      <nav 
+      <nav
         ref={navRef}
-        className="h-full flex items-center justify-start gap-1 md:gap-3 whitespace-nowrap flex-nowrap shrink-0" 
+        className="h-full flex items-center justify-start gap-1 md:gap-3 whitespace-nowrap flex-nowrap shrink-0"
         aria-label="Navegación de categorías"
       >
         {/* Enlaces Rápidos destacados (Solo Desktop) */}
@@ -123,6 +123,7 @@ export default function NavbarCategories({
               {/* Botón interactivo de la Categoría */}
               <button
                 type="button"
+                aria-expanded={isOpen}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleCategoryClick(cat.id, hasSubs);
@@ -141,10 +142,10 @@ export default function NavbarCategories({
               </button>
 
               {/* Dropdown flotante con subcategorías para COMPUTADORA / DESKTOP (Nivel 2) */}
-              <div 
+              <div
                 className={`hidden md:block absolute top-full left-0 w-64 bg-white border border-gray-200 shadow-xl rounded-b-lg transition-all duration-150 transform z-50 py-2 ${
-                  isOpen 
-                    ? 'opacity-100 visible translate-y-0 pointer-events-auto' 
+                  isOpen
+                    ? 'opacity-100 visible translate-y-0 pointer-events-auto'
                     : 'opacity-0 invisible translate-y-1 pointer-events-none md:group-hover:opacity-100 md:group-hover:visible md:group-hover:translate-y-0 md:group-hover:pointer-events-auto'
                 }`}
               >
@@ -184,10 +185,10 @@ export default function NavbarCategories({
 
                       {/* Flyout lateral a la derecha para Nivel 3 */}
                       {hasLevel3 && (
-                        <div 
+                        <div
                           className={`absolute left-full top-0 w-56 bg-white border border-gray-200 shadow-xl rounded-r-lg transition-all duration-150 py-2 z-50 ${
-                            isFlyoutActive 
-                              ? 'opacity-100 visible pointer-events-auto' 
+                            isFlyoutActive
+                              ? 'opacity-100 visible pointer-events-auto'
                               : 'opacity-0 invisible pointer-events-none md:group-hover/sub:opacity-100 md:group-hover/sub:visible md:group-hover/sub:pointer-events-auto'
                           }`}
                         >
@@ -223,7 +224,7 @@ export default function NavbarCategories({
 
         {/* Si hay más de MAX_DIRECT categorías, se agrupan en "+ Más" */}
         {extraCategories.length > 0 && (
-          <div 
+          <div
             className="relative group h-full flex items-center shrink-0"
             onMouseLeave={() => setActiveFlyout(null)}
           >
@@ -234,20 +235,20 @@ export default function NavbarCategories({
                 setOpenDropdownId(prev => (prev === 'extra' ? null : 'extra'));
               }}
               className={`relative px-2.5 md:px-3 py-2 text-xs md:text-sm font-medium tracking-normal transition-colors flex items-center gap-1.5 h-full shrink-0 whitespace-nowrap select-none ${
-                isOpen ? 'text-accent font-semibold' : 'text-gray-700 hover:text-accent'
+                openDropdownId === 'extra' ? 'text-accent font-semibold' : 'text-gray-700 hover:text-accent'
               }`}
             >
               <span>+ Más</span>
               <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${
-                isOpen ? 'rotate-180 text-accent' : 'md:group-hover:rotate-180 md:group-hover:text-accent'
+                openDropdownId === 'extra' ? 'rotate-180 text-accent' : 'md:group-hover:rotate-180 md:group-hover:text-accent'
               }`} />
               <span className={`absolute bottom-0 left-0 h-[2px] bg-accent transition-all duration-200 ${
-                isOpen ? 'w-full' : 'w-0 md:group-hover:w-full'
+                openDropdownId === 'extra' ? 'w-full' : 'w-0 md:group-hover:w-full'
               }`} />
             </button>
 
             {/* Desktop dropdown para Extra */}
-            <div 
+            <div
               className={`hidden md:block absolute top-full left-0 w-56 bg-white border border-gray-200 shadow-xl rounded-b-lg transition-all duration-150 transform z-50 py-2 ${
                 openDropdownId === 'extra'
                   ? 'opacity-100 visible translate-y-0 pointer-events-auto'

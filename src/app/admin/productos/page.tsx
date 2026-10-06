@@ -58,14 +58,14 @@ export default function AdminProducts() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold text-primary">Productos</h1>
         <Link href="/admin/productos/nuevo">
           <Button>+ Nuevo Producto</Button>
         </Link>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
         <table className="w-full text-left border-collapse text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
@@ -88,15 +88,15 @@ export default function AdminProducts() {
                 <td className="p-4 text-gray-600">Q {parseFloat(p.price).toFixed(2)}</td>
                 <td className="p-4 font-mono">{p.stock}</td>
                 <td className="p-4 text-gray-500">{p.category?.name}</td>
-                <td className="p-4 cursor-pointer" onClick={() => toggleStatus(p.id, p.status)}>
-                  <Badge variant={p.status === 'ACTIVE' ? 'success' : 'default'}>{p.status}</Badge>
+                <td className="p-4"><button type="button" className="min-h-11" onClick={() => toggleStatus(p.id, p.status)} aria-label={`Cambiar estado de ${p.name}`}>
+                  <Badge variant={p.status === 'ACTIVE' ? 'success' : 'default'}>{p.status}</Badge></button>
                 </td>
-                <td className="p-4 cursor-pointer" onClick={() => toggleFeatured(p.id, p.featured)}>
-                  <Badge variant={p.featured ? 'warning' : 'default'}>{p.featured ? 'Sí' : 'No'}</Badge>
+                <td className="p-4"><button type="button" className="min-h-11" onClick={() => toggleFeatured(p.id, p.featured)} aria-label={`Cambiar destacado de ${p.name}`}>
+                  <Badge variant={p.featured ? 'warning' : 'default'}>{p.featured ? 'Sí' : 'No'}</Badge></button>
                 </td>
                 <td className="p-4">
                   <div className="flex items-center gap-3">
-                    <Link href={`/admin/productos/editar/${p.id}`} className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                    <Link href={`/admin/productos/editar/${p.id}`} className="text-sm font-medium text-neutral-600 hover:text-neutral-800 transition-colors">
                       Editar
                     </Link>
                     <ShareProductButton

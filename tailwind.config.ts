@@ -11,11 +11,11 @@ const config: Config = {
       colors: {
         primary: "#111111", // Negro principal
         accent: {
-          DEFAULT: "#8A6818", // Dorado profundo con ratio de contraste > 5.1:1 sobre blanco (cumple WCAG AA)
-          hover: "#725513",
-          light: "#C9A84C",   // Dorado cálido para fondos oscuros o acentos decorativos
+          DEFAULT: "#171717", // Monochrome action color
+          hover: "#404040",
+          light: "#FFFFFF",   // Foreground on dark surfaces
         },
-        background: "#F9F9F9", // Off-white de fondo base
+        background: "#FAFAFA", // Off-white de fondo base
         foreground: "#111111",
         surface: "#FFFFFF",
       },

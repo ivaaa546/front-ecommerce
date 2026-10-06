@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/useCartStore';
@@ -8,6 +8,7 @@ import { X, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 
 export default function CartDrawer() {
   const router = useRouter();
+  const panelRef = useRef<HTMLDivElement | null>(null);
   const { items, isOpen, closeCart, updateQuantity, removeItem } = useCartStore();
   const total = useCartStore((state) =>
     state.items.reduce((total, item) => total + item.price * item.quantity, 0)
@@ -44,6 +45,23 @@ export default function CartDrawer() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, closeCart]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const panel = panelRef.current;
+    panel?.querySelector<HTMLButtonElement>('button')?.focus();
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || !panel) return;
+      const controls = Array.from(panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'));
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener('keydown', trapFocus);
+    return () => { document.removeEventListener('keydown', trapFocus); previousFocus?.focus(); };
+  }, [isOpen]);
+
   if (!mounted) return null;
 
   const handleCheckout = () => {
@@ -69,6 +87,8 @@ export default function CartDrawer() {
 
       {/* Panel lateral deslizante (Drawer) */}
       <div
+        ref={node => { panelRef.current = node; node?.toggleAttribute('inert', !isOpen); }}
+        aria-hidden={!isOpen}
         className={`fixed inset-y-0 right-0 z-50 w-full max-w-[390px] sm:max-w-[420px] bg-white shadow-2xl flex flex-col justify-between transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
@@ -109,7 +129,7 @@ export default function CartDrawer() {
               <p className="text-sm text-gray-500 mb-6">Agrega tus productos favoritos para empezar.</p>
               <button
                 type="button"
-                onClick={closeCart}
+                onClick={() => { closeCart(); router.push('/productos'); }}
                 className="px-6 py-2.5 bg-black text-white text-sm font-semibold rounded-full hover:bg-zinc-800 transition-colors inline-flex items-center gap-2"
               >
                 <span>Explorar catálogo</span>
@@ -151,7 +171,7 @@ export default function CartDrawer() {
                       </div>
 
                       {item.stock <= 5 && (
-                        <p className="text-[11px] text-orange-600 font-medium mt-0.5">
+                        <p className="text-[11px] text-neutral-600 font-medium mt-0.5">
                           Solo {item.stock} disponibles
                         </p>
                       )}
@@ -160,7 +180,7 @@ export default function CartDrawer() {
                     {/* Selector de Cantidad + Precio */}
                     <div className="flex items-center justify-between mt-auto pt-1">
                       {/* Control de Cantidad con bordes negros */}
-                      <div className="border border-gray-900 rounded-xs flex items-center h-8 bg-white">
+                      <div className="border border-gray-900 rounded-lg flex items-center h-11 bg-white">
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.productId, item.quantity - 1)}
@@ -201,7 +221,7 @@ export default function CartDrawer() {
           <div className="px-5 pb-5 pt-2 bg-white border-t border-gray-100">
             {/* Total Estimado */}
             <div className="flex items-baseline justify-between mb-4">
-              <span className="text-lg sm:text-xl font-bold text-black">Total estimado</span>
+              <span className="text-lg sm:text-xl font-bold text-black">Subtotal</span>
               <span className="text-xl sm:text-2xl font-bold text-black tracking-tight">
                 Q {total.toFixed(2)}
               </span>
@@ -213,7 +233,7 @@ export default function CartDrawer() {
               <button
                 type="button"
                 onClick={handleCheckout}
-                className="w-full bg-white hover:bg-gray-50 text-black border-2 border-black rounded-full py-3.5 font-bold text-sm sm:text-base text-center transition-all shadow-xs active:scale-[0.99] flex items-center justify-center cursor-pointer"
+                className="w-full bg-primary hover:bg-zinc-800 text-white rounded-lg py-3.5 font-bold text-sm sm:text-base text-center transition-all shadow-xs active:scale-[0.99] flex items-center justify-center cursor-pointer"
               >
                 Finalizar compra
               </button>
@@ -222,7 +242,7 @@ export default function CartDrawer() {
               <button
                 type="button"
                 onClick={handleGoToCart}
-                className="w-full bg-black hover:bg-zinc-800 text-white rounded-full py-3.5 font-bold text-sm sm:text-base text-center transition-all shadow-xs active:scale-[0.99] flex items-center justify-center cursor-pointer"
+                className="w-full bg-white hover:bg-gray-50 text-primary border border-gray-300 rounded-lg py-3.5 font-bold text-sm sm:text-base text-center transition-all shadow-xs active:scale-[0.99] flex items-center justify-center cursor-pointer"
               >
                 Ver carrito
               </button>

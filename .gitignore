@@ -37,3 +37,5 @@ pnpm-debug.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+# Local visual review captures
+/.impeccable/review/

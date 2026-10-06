@@ -11,7 +11,7 @@ export default function AdminCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Form State
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<Category | null>(null);
@@ -58,10 +58,10 @@ export default function AdminCategories() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const body = JSON.stringify({ 
-        name: newCatName, 
+      const body = JSON.stringify({
+        name: newCatName,
         description: newCatDesc,
-        parentId: newCatParentId || null 
+        parentId: newCatParentId || null
       });
 
       if (editingCat) {
@@ -79,7 +79,7 @@ export default function AdminCategories() {
           body,
         });
       }
-      
+
       closeForm();
       loadCategories();
     } catch (err: any) {
@@ -115,7 +115,7 @@ export default function AdminCategories() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold text-primary">Categorías</h1>
         <Button onClick={isFormOpen ? closeForm : openCreate}>
           {isFormOpen ? 'Cancelar' : '+ Nueva Categoría'}
@@ -125,7 +125,7 @@ export default function AdminCategories() {
       {error && <div className="bg-red-50 text-red-600 p-4 mb-6 rounded">{error}</div>}
 
       {isFormOpen && (
-        <form onSubmit={handleSubmit} className="bg-white p-6 border border-gray-200 rounded-lg mb-8 max-w-md">
+        <form onSubmit={handleSubmit} className="bg-white p-6 border border-gray-200 rounded-xl mb-8 max-w-md">
           <h2 className="text-lg font-bold mb-4 text-primary">
             {editingCat ? 'Editar Categoría' : 'Crear Categoría'}
           </h2>
@@ -134,8 +134,8 @@ export default function AdminCategories() {
             <Input label="Descripción" value={newCatDesc} onChange={(e) => setNewCatDesc(e.target.value)} />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Categoría Padre (Opcional)</label>
-              <select 
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent bg-white"
+              <select
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent bg-white"
                 value={newCatParentId}
                 onChange={(e) => setNewCatParentId(e.target.value)}
               >
@@ -153,7 +153,7 @@ export default function AdminCategories() {
         </form>
       )}
 
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
@@ -183,10 +183,10 @@ export default function AdminCategories() {
                   <Badge variant={cat.status === 'ACTIVE' ? 'success' : 'default'}>{cat.status}</Badge>
                 </td>
                 <td className="p-4 space-x-3">
-                  <button onClick={() => openEdit(cat)} className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                  <button onClick={() => openEdit(cat)} className="text-sm font-medium text-neutral-600 hover:text-neutral-800 transition-colors">
                     Editar
                   </button>
-                  <button onClick={() => handleToggleStatus(cat.id, cat.status)} className="text-sm text-blue-600 hover:text-blue-800 transition-colors">
+                  <button onClick={() => handleToggleStatus(cat.id, cat.status)} className="text-sm text-neutral-600 hover:text-neutral-800 transition-colors">
                     {cat.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
                   </button>
                   <button onClick={() => handleDelete(cat.id)} className="text-sm text-red-600 hover:text-red-800 transition-colors">

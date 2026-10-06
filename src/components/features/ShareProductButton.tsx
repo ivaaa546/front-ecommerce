@@ -82,19 +82,19 @@ export default function ShareProductButton({
         onClick={handleCopyLink}
         title="Copiar enlace directo para anuncios"
         className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md transition-all border ${copied
-          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          ? 'bg-neutral-50 text-neutral-700 border-neutral-200'
           : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100 hover:text-primary shadow-2xs'
           }`}
       >
         {copied ? (
           <>
-            <Check className="w-3.5 h-3.5 text-emerald-600" />
+            <Check className="w-3.5 h-3.5 text-neutral-600" />
             <span>¡Copiado!</span>
           </>
         ) : (
           <>
             <Copy className="w-3.5 h-3.5 text-gray-500" />
-            <span>Link para anuncio</span>
+            <span>Link</span>
           </>
         )}
       </button>
@@ -112,8 +112,8 @@ export default function ShareProductButton({
       >
         {copied ? (
           <>
-            <Check className="w-4 h-4 text-emerald-600 animate-in zoom-in duration-150" />
-            <span className="text-emerald-700 font-semibold">¡Enlace copiado!</span>
+            <Check className="w-4 h-4 text-neutral-600 animate-in zoom-in duration-150" />
+            <span className="text-neutral-700 font-semibold">¡Enlace copiado!</span>
           </>
         ) : (
           <>
@@ -131,7 +131,7 @@ export default function ShareProductButton({
         aria-label="Copiar enlace"
       >
         {copied ? (
-          <Check className="w-4 h-4 text-emerald-600" />
+          <Check className="w-4 h-4 text-neutral-600" />
         ) : (
           <Copy className="w-4 h-4" />
         )}

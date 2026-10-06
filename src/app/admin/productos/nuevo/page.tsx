@@ -13,7 +13,7 @@ export default function NuevoProducto() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  
+
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -30,7 +30,7 @@ export default function NuevoProducto() {
     fetcher<Category[]>('/admin/categories', { requireAuth: true }).then(setCategories);
   }, []);
 
-  
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -56,10 +56,10 @@ export default function NuevoProducto() {
         const data = await res.json();
         newUrls.push(data.url);
       }
-      
+
       const updatedImages = [...form.images, ...newUrls];
-      setForm({ 
-        ...form, 
+      setForm({
+        ...form,
         images: updatedImages,
         imageUrl: updatedImages[0] || form.imageUrl // La primera es la principal
       });
@@ -79,7 +79,7 @@ export default function NuevoProducto() {
       imageUrl: newImages[0] || ''
     });
   };
-  
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,12 +110,12 @@ export default function NuevoProducto() {
     return `${getCategoryPath(parent, allCats)} > ${cat.name}`;
   };
 
-  const sortedCategories = [...categories].sort((a, b) => 
+  const sortedCategories = [...categories].sort((a, b) =>
     getCategoryPath(a, categories).localeCompare(getCategoryPath(b, categories))
   );
 
   return (
-    <div className="max-w-2xl bg-white border border-gray-200 rounded-lg p-8">
+    <div className="max-w-2xl bg-white border border-gray-200 rounded-xl p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-primary">Nuevo Producto</h1>
         <Link href="/admin/productos" className="text-sm text-gray-500 hover:text-accent">Cancelar</Link>
@@ -123,15 +123,15 @@ export default function NuevoProducto() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input label="Nombre" required value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
-        
+
         <div className="flex flex-col space-y-1">
           <label className="text-sm font-medium text-gray-700">Descripción</label>
-          <textarea 
-            required 
-            className="w-full rounded-md border border-gray-300 p-2 text-sm" 
+          <textarea
+            required
+            className="w-full rounded-lg border border-gray-300 p-2 text-sm"
             rows={4}
-            value={form.description} 
-            onChange={e => setForm({...form, description: e.target.value})} 
+            value={form.description}
+            onChange={e => setForm({...form, description: e.target.value})}
           />
         </div>
 
@@ -144,9 +144,9 @@ export default function NuevoProducto() {
 
         <div className="flex flex-col space-y-1">
           <label className="text-sm font-medium text-gray-700">Categoría o Subcategoría</label>
-          <select 
-            required 
-            className="h-10 w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+          <select
+            required
+            className="h-10 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white"
             value={form.categoryId}
             onChange={e => setForm({...form, categoryId: e.target.value})}
           >
@@ -158,8 +158,8 @@ export default function NuevoProducto() {
         <div className="flex flex-col space-y-2 pt-2 border-t">
           <label className="text-sm font-medium text-gray-700">Imágenes del producto (Máx 5)</label>
           <input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={uploading || form.images.length >= 5} />
-          {uploading && <span className="text-xs text-blue-500">Subiendo imágenes a Cloudinary...</span>}
-          
+          {uploading && <span className="text-xs text-neutral-500">Subiendo imágenes a Cloudinary...</span>}
+
           {form.images.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
               {form.images.map((url, i) => (

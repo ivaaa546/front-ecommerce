@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import CartDrawer from '@/components/layout/CartDrawer';
-
-const inter = Inter({ subsets: ['latin'] });
+import MetaPixel from '@/components/analytics/MetaPixel';
 
 export const metadata: Metadata = {
   title: 'E-commerce MVP',
@@ -17,7 +16,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${inter.className} min-h-screen flex flex-col`}>
+      <body className={`${GeistSans.className} min-h-screen flex flex-col`}>
+        <MetaPixel />
         {children}
         <CartDrawer />
       </body>
