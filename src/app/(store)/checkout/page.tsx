@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/useCartStore';
 import { Input } from '@/components/ui/Input';
@@ -14,6 +14,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, getTotal, clearCart, reconcileItems } = useCartStore();
   const [mounted, setMounted] = useState(false);
+  const orderCreatedRef = useRef(false);
 
   // Costo y configuración de envío vigente (RF-035, RN-010, PA-007)
   const [shippingCost, setShippingCost] = useState<number | null>(null);
@@ -63,7 +64,7 @@ export default function CheckoutPage() {
 
   // Si el carrito está vacío en el montaje, redirigir al carrito
   useEffect(() => {
-    if (mounted && items.length === 0) {
+    if (mounted && items.length === 0 && !orderCreatedRef.current) {
       router.replace('/carrito');
     }
   }, [mounted, items.length, router]);
@@ -212,7 +213,9 @@ export default function CheckoutPage() {
         sessionStorage.setItem('last-confirmed-order', JSON.stringify(order));
       }
 
-      // Vaciar carrito únicamente tras el éxito verificado de la compra
+      // Marcar el éxito antes de vaciar: evita que el guard de carrito vacío
+      // sustituya la navegación a la pantalla de confirmación.
+      orderCreatedRef.current = true;
       clearCart();
 
       // Redirigir a la página de éxito unificada

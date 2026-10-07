@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
-import { CheckCircle, AlertCircle, ShoppingBag } from 'lucide-react';
+import { CheckCircle, AlertCircle, ShoppingBag, Truck } from 'lucide-react';
 import { trackMetaEvent } from '@/lib/metaPixel';
 import { AuthoritativeOrderResponse } from '@/types';
 
@@ -96,6 +96,17 @@ function ExitoContent() {
           <p className="text-3xl font-extrabold text-primary">{confirmedOrder.orderNumber}</p>
         </div>
 
+        <section aria-labelledby="delivery-estimate" className="mb-8 rounded-xl bg-primary px-5 py-5 text-left text-white sm:px-6">
+          <div className="flex items-start gap-4">
+            <Truck className="mt-0.5 h-7 w-7 shrink-0" aria-hidden="true" />
+            <div>
+              <p id="delivery-estimate" className="text-sm font-medium text-neutral-300">Entrega estimada</p>
+              <p className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">Tu pedido llegará en 1 a 3 días hábiles</p>
+              <p className="mt-1 text-sm text-neutral-300">Te contactaremos si necesitamos confirmar tu dirección.</p>
+            </div>
+          </div>
+        </section>
+
         {/* Resumen detallado con importes del servidor */}
         <div className="border border-gray-200 rounded-xl p-6 mb-8 text-left bg-white">
           <h3 className="font-bold text-gray-900 text-sm mb-4 border-b pb-2">Detalle del pedido</h3>
@@ -134,8 +145,8 @@ function ExitoContent() {
         <div className="text-left bg-neutral-50 border border-neutral-200/80 p-5 rounded-xl mb-8">
           <h3 className="font-semibold text-neutral-900 mb-2 text-sm">Siguientes pasos:</h3>
           <ul className="list-disc list-inside text-neutral-700 space-y-1.5 text-xs">
-            <li>Prepararemos tu paquete para entrega en 1 a 3 días hábiles.</li>
-            <li>Te contactaremos al número <span className="font-semibold">{confirmedOrder.customer.phone}</span> si se requiere confirmación de dirección.</li>
+            <li>Prepararemos tu paquete para entrega.</li>
+            <li>Te contactaremos al número <span className="font-semibold">{confirmedOrder.customer.phone}</span> si se requiere confirmar tu dirección.</li>
             <li>Recuerda tener preparado el monto exacto en efectivo (Q {Number(confirmedOrder.total).toFixed(2)}) al recibirlo.</li>
           </ul>
         </div>
