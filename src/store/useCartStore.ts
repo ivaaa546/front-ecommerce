@@ -24,6 +24,7 @@ interface CartState {
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
+  reconcileItems: (freshProducts: Array<{ id: string; name: string; price: string | number; stock: number; imageUrl: string; status: string; slug?: string }>) => void;
 }
 
 export const useCartStore = create<CartState>()(
@@ -40,16 +41,27 @@ export const useCartStore = create<CartState>()(
         set((state) => {
           const existingItem = state.items.find((i) => i.productId === newItem.productId);
           if (existingItem) {
-            // Verifica que no supere el stock
+            // T-022, RN-002: Actualiza precio, stock e imagen vigentes y suma cantidad sin superar stock
             const newQuantity = Math.min(existingItem.quantity + newItem.quantity, newItem.stock);
             return {
               isOpen: true,
               items: state.items.map((i) =>
-                i.productId === newItem.productId ? { ...i, quantity: newQuantity } : i
+                i.productId === newItem.productId
+                  ? {
+                      ...i,
+                      name: newItem.name,
+                      price: newItem.price,
+                      stock: newItem.stock,
+                      imageUrl: newItem.imageUrl,
+                      slug: newItem.slug ?? i.slug,
+                      quantity: newQuantity,
+                    }
+                  : i
               ),
             };
           }
-          return { isOpen: true, items: [...state.items, newItem] };
+          const validQuantity = Math.min(newItem.quantity, newItem.stock);
+          return { isOpen: true, items: [...state.items, { ...newItem, quantity: validQuantity }] };
         });
       },
 
@@ -60,7 +72,17 @@ export const useCartStore = create<CartState>()(
             const newQuantity = Math.min(Math.max(1, newItem.quantity), newItem.stock);
             return {
               items: state.items.map((i) =>
-                i.productId === newItem.productId ? { ...i, quantity: newQuantity } : i
+                i.productId === newItem.productId
+                  ? {
+                      ...i,
+                      name: newItem.name,
+                      price: newItem.price,
+                      stock: newItem.stock,
+                      imageUrl: newItem.imageUrl,
+                      slug: newItem.slug ?? i.slug,
+                      quantity: newQuantity,
+                    }
+                  : i
               ),
             };
           }
@@ -78,7 +100,9 @@ export const useCartStore = create<CartState>()(
         set((state) => ({
           items: state.items.map((i) => {
             if (i.productId === productId) {
-              return { ...i, quantity: Math.max(1, quantity) };
+              // T-022: Incrementar no supera el stock conocido
+              const boundedQuantity = Math.min(Math.max(1, quantity), i.stock);
+              return { ...i, quantity: boundedQuantity };
             }
             return i;
           }),
@@ -88,11 +112,36 @@ export const useCartStore = create<CartState>()(
       clearCart: () => set({ items: [] }),
 
       getTotal: () => {
-        return get().items.reduce((total, item) => total + item.price * item.quantity, 0);
+        const raw = get().items.reduce((total, item) => total + item.price * item.quantity, 0);
+        return Math.round(raw * 100) / 100;
       },
 
       getItemCount: () => {
         return get().items.reduce((count, item) => count + item.quantity, 0);
+      },
+
+      reconcileItems: (freshProducts) => {
+        const freshMap = new Map(freshProducts.map((p) => [p.id, p]));
+        set((state) => ({
+          items: state.items
+            .filter((item) => {
+              const fresh = freshMap.get(item.productId);
+              return fresh && fresh.status === 'ACTIVE' && fresh.stock > 0;
+            })
+            .map((item) => {
+              const fresh = freshMap.get(item.productId)!;
+              const numericPrice = typeof fresh.price === 'string' ? parseFloat(fresh.price) : Number(fresh.price);
+              return {
+                ...item,
+                name: fresh.name,
+                price: isNaN(numericPrice) ? item.price : numericPrice,
+                stock: fresh.stock,
+                imageUrl: fresh.imageUrl,
+                slug: fresh.slug ?? item.slug,
+                quantity: Math.min(item.quantity, fresh.stock),
+              };
+            }),
+        }));
       },
     }),
     {

@@ -17,20 +17,27 @@ export default async function CategoryPage({
   let products: Product[] = [];
   let categories: Category[] = [];
 
-  try {
-    const queryParams = new URLSearchParams();
-    if (categorySlug) queryParams.append('category', categorySlug);
-    if (search) queryParams.append('search', search);
+  const queryParams = new URLSearchParams();
+  if (categorySlug) queryParams.append('category', categorySlug);
+  if (search) queryParams.append('search', search);
 
-    const qs = queryParams.toString();
-    const endpoint = `/products${qs ? `?${qs}` : ''}`;
+  const qs = queryParams.toString();
+  const endpoint = `/products${qs ? `?${qs}` : ''}`;
 
-    [products, categories] = await Promise.all([
-      fetcher<Product[]>(endpoint),
-      fetcher<Category[]>('/categories')
-    ]);
-  } catch (error) {
-    console.error('Error al obtener catálogo:', error);
+  const [productsRes, categoriesRes] = await Promise.allSettled([
+    fetcher<Product[]>(endpoint),
+    fetcher<Category[]>('/categories')
+  ]);
+
+  let productsError: string | null = null;
+  if (productsRes.status === 'fulfilled') {
+    products = productsRes.value;
+  } else {
+    productsError = 'Ocurrió un problema de conexión temporal al cargar los productos de esta categoría.';
+  }
+
+  if (categoriesRes.status === 'fulfilled') {
+    categories = categoriesRes.value;
   }
 
   const currentCategory = categories.find(c => c.slug === categorySlug);
@@ -72,10 +79,22 @@ export default async function CategoryPage({
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary">
               {currentCategory?.name || 'Catálogo'}
             </h1>
-            <p className="text-gray-500 mt-2">{products.length} productos encontrados en esta categoría.</p>
+            {!productsError && (
+              <p className="text-gray-500 mt-2">{products.length} productos encontrados en esta categoría.</p>
+            )}
           </div>
 
-          {products.length > 0 ? (
+          {productsError ? (
+            <div className="text-center py-16 bg-white border border-gray-200 rounded-xl p-8">
+              <p className="text-gray-700 font-medium mb-3">{productsError}</p>
+              <Link
+                href={`/categorias/${categorySlug}${qs ? `?${qs}` : ''}`}
+                className="inline-flex items-center justify-center px-4 py-2 border border-primary text-sm font-medium rounded-md text-primary bg-white hover:bg-gray-50 transition-colors"
+              >
+                Reintentar carga
+              </Link>
+            </div>
+          ) : products.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />

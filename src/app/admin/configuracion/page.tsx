@@ -11,6 +11,8 @@ export default function AdminSettings() {
 
   const [shipping, setShipping] = useState({ type: 'FIXED', amount: '30' });
   const [storeName, setStoreName] = useState('E-COMMERCE');
+  const [footerTagline, setFooterTagline] = useState('Tu tienda de confianza con pago contra entrega en toda Guatemala.');
+  const [footerCopyright, setFooterCopyright] = useState('Todos los derechos reservados. Pago contra entrega garantizado.');
   const [logoUrl, setLogoUrl] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [metaPixelId, setMetaPixelId] = useState('');
@@ -20,9 +22,16 @@ export default function AdminSettings() {
   const [quickLinksActive, setQuickLinksActive] = useState(true);
   const [quickLinks, setQuickLinks] = useState<{ text: string, url: string }[]>([]);
 
-  useEffect(() => {
-    fetcher<any>('/settings').then(res => {
+  const [loadError, setLoadError] = useState('');
+
+  const loadSettings = async () => {
+    setLoading(true);
+    setLoadError('');
+    try {
+      const res = await fetcher<any>('/settings');
       if (res.storeName) setStoreName(res.storeName);
+      if (res.footerTagline) setFooterTagline(res.footerTagline);
+      if (res.footerCopyright) setFooterCopyright(res.footerCopyright);
       if (res.logoUrl) setLogoUrl(res.logoUrl);
       if (res.metaPixelId) setMetaPixelId(res.metaPixelId);
       if (res.quickLinksActive !== undefined) setQuickLinksActive(res.quickLinksActive);
@@ -35,8 +44,15 @@ export default function AdminSettings() {
       } else if (res.banner?.imageUrl) {
         setBanners([res.banner]);
       }
+    } catch (err: any) {
+      setLoadError(err?.message || 'No se pudieron cargar los ajustes.');
+    } finally {
       setLoading(false);
-    });
+    }
+  };
+
+  useEffect(() => {
+    loadSettings();
   }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
@@ -154,6 +170,19 @@ export default function AdminSettings() {
     }
   };
 
+  const handleSaveFooter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await fetcher('/admin/settings/footer', { method: 'PUT', requireAuth: true, body: JSON.stringify({ tagline: footerTagline, copyright: footerCopyright }) });
+      alert('Footer actualizado correctamente');
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSaveBanners = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -224,6 +253,16 @@ export default function AdminSettings() {
   };
 
   if (loading) return <div>Cargando ajustes...</div>;
+
+  if (loadError) {
+    return (
+      <div className="max-w-2xl space-y-4 rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-900">
+        <h1 className="text-2xl font-bold">No se pudo cargar la configuración</h1>
+        <p className="text-sm">{loadError}</p>
+        <Button type="button" onClick={loadSettings}>Reintentar</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl space-y-8 pb-12">
@@ -331,6 +370,16 @@ export default function AdminSettings() {
         <form onSubmit={handleSaveMetaPixel} className="space-y-4 max-w-md">
           <Input label="ID del Pixel de Meta" value={metaPixelId} onChange={e => setMetaPixelId(e.target.value)} placeholder="Ej. 123456789012345" inputMode="numeric" />
           <Button type="submit" disabled={saving}>Guardar Pixel</Button>
+        </form>
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
+        <h2 className="text-xl font-bold text-primary mb-2">Texto del pie de página</h2>
+        <p className="mb-6 max-w-2xl text-sm leading-relaxed text-neutral-600">Personaliza la descripción de tu tienda y el texto legal que aparece debajo de los enlaces.</p>
+        <form onSubmit={handleSaveFooter} className="space-y-4 max-w-2xl">
+          <Input label="Descripción del footer" value={footerTagline} onChange={e => setFooterTagline(e.target.value)} placeholder="Tu tienda de confianza..." />
+          <Input label="Texto de derechos reservados" value={footerCopyright} onChange={e => setFooterCopyright(e.target.value)} placeholder="Todos los derechos reservados..." />
+          <Button type="submit" disabled={saving}>Guardar texto</Button>
         </form>
       </div>
 

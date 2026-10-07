@@ -1,21 +1,46 @@
 import React from 'react';
-import { fetcher } from '@/services/api';
+import { fetcher, ApiError } from '@/services/api';
 import { Product } from '@/types';
 import { notFound } from 'next/navigation';
 import { AddToCartButton } from '@/components/features/AddToCartButton';
 import { ProductGallery } from '@/components/features/ProductGallery';
 import ShareProductButton from '@/components/features/ShareProductButton';
 import Link from 'next/link';
-import { ChevronRight, ShieldCheck, Truck } from 'lucide-react';
+import { ChevronRight, ShieldCheck, Truck, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 import ViewContentTracker from '@/components/analytics/ViewContentTracker';
 
 export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
   let product: Product | null = null;
+  let loadError: string | null = null;
 
   try {
     product = await fetcher<Product>(`/products/${params.slug}`);
-  } catch (error) {
-    console.error('Error fetching product details:', error);
+  } catch (error: unknown) {
+    if (error instanceof ApiError && error.status === 404) {
+      notFound();
+    }
+    loadError = 'Ocurrió un problema temporal al cargar este producto. Por favor reintenta.';
+  }
+
+  if (loadError) {
+    return (
+      <div className="store-shell py-16 text-center">
+        <div className="bg-white border border-gray-200 rounded-xl p-8 max-w-lg mx-auto">
+          <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">No pudimos cargar este producto</h2>
+          <p className="text-gray-600 text-sm mb-6">{loadError}</p>
+          <div className="flex gap-4 justify-center">
+            <Link href={`/${params.slug}`}>
+              <Button>Reintentar</Button>
+            </Link>
+            <Link href="/productos">
+              <Button variant="outline">Ver catálogo</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!product) {

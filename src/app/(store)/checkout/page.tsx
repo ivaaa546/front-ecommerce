@@ -1,23 +1,31 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/useCartStore';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { fetcher } from '@/services/api';
-import { CheckCircle } from 'lucide-react';
+import { fetcher, ApiError } from '@/services/api';
 import { trackMetaEvent } from '@/lib/metaPixel';
+import { AuthoritativeOrderResponse, Product } from '@/types';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, getTotal, clearCart } = useCartStore();
+  const { items, getTotal, clearCart, reconcileItems } = useCartStore();
   const [mounted, setMounted] = useState(false);
-  const [shippingCost, setShippingCost] = useState(30); // Default, luego se actualiza
+
+  // Costo y configuración de envío vigente (RF-035, RN-010, PA-007)
+  const [shippingCost, setShippingCost] = useState<number | null>(null);
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [orderNumber, setOrderNumber] = useState('');
-  const [isSuccess, setIsSuccess] = useState(false);
+
+  // Estado de conciliación de carrito (T-023, RF-034, RN-014, PA-007)
+  const [reconciliationNotice, setReconciliationNotice] = useState<string[] | null>(null);
+  const [requiresReconfirmation, setRequiresReconfirmation] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -30,47 +38,151 @@ export default function CheckoutPage() {
     reference: '',
   });
 
+  const loadSettings = useCallback(async () => {
+    setSettingsLoading(true);
+    setSettingsError(null);
+    try {
+      const res = await fetcher<{ shipping: { type: string; amount: number | string } }>('/settings');
+      const cost = res.shipping.type === 'FREE' ? 0 : Number(res.shipping.amount);
+      if (isNaN(cost) || cost < 0) {
+        throw new Error('Configuración de envío inválida');
+      }
+      setShippingCost(cost);
+    } catch {
+      setSettingsError('No se pudo obtener la tarifa de envío vigente. Por favor reintenta.');
+      setShippingCost(null); // No asumir costo supuesto (RF-035)
+    } finally {
+      setSettingsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     setMounted(true);
-    if (items.length > 0) {
-      // Obtener settings para el costo de envío
-      fetcher<{ shipping: { type: string; amount: string } }>('/settings')
-        .then((res) => {
-          setShippingCost(res.shipping.type === 'FREE' ? 0 : parseFloat(res.shipping.amount));
-        })
-        .catch((err) => console.error('Error cargando settings:', err));
-    }
-  }, [items.length]);
+    loadSettings();
+  }, [loadSettings]);
 
+  // Si el carrito está vacío en el montaje, redirigir al carrito
   useEffect(() => {
-    if (items.length > 0) {
-      trackMetaEvent('InitiateCheckout', { content_ids: items.map(item => item.productId), num_items: items.length, value: getTotal() + shippingCost, currency: 'GTQ' });
+    if (mounted && items.length === 0) {
+      router.replace('/carrito');
     }
-  }, [items.length, shippingCost]);
+  }, [mounted, items.length, router]);
 
+  // Telemetría InitiateCheckout al estar listos
   useEffect(() => {
-    if (mounted && items.length === 0 && !isSuccess) router.replace('/carrito');
-  }, [mounted, items.length, isSuccess, router]);
+    if (items.length > 0 && shippingCost !== null) {
+      trackMetaEvent('InitiateCheckout', {
+        content_ids: items.map((item) => item.productId),
+        num_items: items.length,
+        value: getTotal() + shippingCost,
+        currency: 'GTQ',
+      });
+    }
+  }, [items, shippingCost, getTotal]);
 
   if (!mounted) return null;
-
-  if (items.length === 0 && !isSuccess) {
-    return null;
-  }
+  if (items.length === 0) return null;
 
   const subtotal = getTotal();
-  const total = subtotal + shippingCost;
+  const currentShipping = shippingCost ?? 0;
+  const total = subtotal + currentShipping;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  /**
+   * Concilia el carrito con los productos y tarifas vigentes en el backend (T-023).
+   * Retorna true si todo coincide; false si hubo cambios que requieren reconfirmación.
+   */
+  const reconcileCartBeforeSubmit = async (): Promise<boolean> => {
+    try {
+      const idsParam = items.map((i) => i.productId).join(',');
+      const [freshProducts, freshSettings] = await Promise.all([
+        fetcher<Product[]>(`/products?ids=${idsParam}`),
+        fetcher<{ shipping: { type: string; amount: number | string } }>('/settings'),
+      ]);
+      const freshMap = new Map(freshProducts.map((p) => [p.id, p]));
+      const freshShipping = freshSettings.shipping.type === 'FREE' ? 0 : Number(freshSettings.shipping.amount);
+
+      if (isNaN(freshShipping) || freshShipping < 0) {
+        throw new Error('Configuración de envío inválida');
+      }
+
+      const notices: string[] = [];
+
+      if (shippingCost === null || Math.abs(freshShipping - shippingCost) > 0.001) {
+        notices.push(
+          `La tarifa de envío vigente cambió de ${shippingCost === null ? 'pendiente' : `Q${shippingCost.toFixed(2)}`} a ${freshShipping === 0 ? 'Gratis' : `Q${freshShipping.toFixed(2)}`}.`
+        );
+        setShippingCost(freshShipping);
+        setSettingsError(null);
+      }
+
+      for (const item of items) {
+        const fresh = freshMap.get(item.productId);
+        if (!fresh || fresh.status !== 'ACTIVE') {
+          notices.push(`El producto "${item.name}" ya no está disponible para venta y ha sido retirado del carrito.`);
+          continue;
+        }
+
+        const freshPrice = typeof fresh.price === 'string' ? parseFloat(fresh.price) : Number(fresh.price);
+        if (!isNaN(freshPrice) && Math.abs(freshPrice - item.price) > 0.001) {
+          notices.push(`El precio de "${item.name}" cambió de Q${item.price.toFixed(2)} a Q${freshPrice.toFixed(2)}.`);
+        }
+
+        if (fresh.stock < item.quantity) {
+          if (fresh.stock === 0) {
+            notices.push(`El producto "${item.name}" se agotó y no puede comprarse.`);
+          } else {
+            notices.push(`El stock de "${item.name}" cambió: tu cantidad se ajustó a las ${fresh.stock} unidades disponibles.`);
+          }
+        }
+      }
+
+      if (notices.length > 0) {
+        // Actualizar el carrito con los datos vigentes y exigir confirmación explícita del nuevo resumen.
+        reconcileItems(freshProducts);
+        setReconciliationNotice(notices);
+        setRequiresReconfirmation(true);
+        return false;
+      }
+
+      return true;
+    } catch {
+      setError('No se pudo validar el carrito con datos vigentes del servidor. Por favor reintenta antes de confirmar.');
+      return false;
+    }
+  };
+
+  const handleAcceptReconciliation = () => {
+    setReconciliationNotice(null);
+    setRequiresReconfirmation(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
+    // Validar que tengamos costo de envío real de servidor
+    if (shippingCost === null) {
+      setError('No es posible confirmar la compra sin la tarifa de envío vigente. Por favor reintenta.');
+      return;
+    }
+
+    setLoading(true);
+
     try {
+      // Paso 1: Conciliar productos antes de confirmar si no ha sido reconfirmado
+      if (!requiresReconfirmation) {
+        const isUpToDate = await reconcileCartBeforeSubmit();
+        if (!isUpToDate) {
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Paso 2: Crear el pedido en el backend
       const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
       const payload = {
         customer: {
@@ -86,22 +198,41 @@ export default function CheckoutPage() {
           exactAddress: formData.exactAddress.trim(),
           reference: formData.reference ? formData.reference.trim() : undefined,
         },
-        items: items.map(i => ({ productId: i.productId, quantity: i.quantity })),
+        items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
         paymentMethod: 'CASH_ON_DELIVERY',
       };
 
-      const order = await fetcher<{ orderNumber: string }>('/orders', {
+      const order = await fetcher<AuthoritativeOrderResponse>('/orders', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
 
-      setOrderNumber(order.orderNumber);
-      setIsSuccess(true);
-      sessionStorage.setItem(`meta-purchase-value-${order.orderNumber}`, total.toString());
+      // T-024, T-025, T-026: Guardar la respuesta autoritativa antes de vaciar el carrito
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('last-confirmed-order', JSON.stringify(order));
+      }
+
+      // Vaciar carrito únicamente tras el éxito verificado de la compra
       clearCart();
-    } catch (err: any) {
-      setError(err.message || 'Ocurrió un error al procesar tu pedido. Intenta nuevamente.');
+
+      // Redirigir a la página de éxito unificada
+      router.push(`/checkout/exito?order=${encodeURIComponent(order.orderNumber)}`);
+    } catch (err: unknown) {
       setLoading(false);
+
+      if (err instanceof ApiError) {
+        if (err.code === 'STOCK_CONFLICT' || err.code === 'PRICE_CONFLICT') {
+          setError(`${err.message}. Los datos del carrito han sido actualizados.`);
+          // Disparar conciliación automática para refrescar stock/precios
+          reconcileCartBeforeSubmit();
+        } else {
+          setError(err.message || 'Ocurrió un error al procesar tu pedido. Intenta nuevamente.');
+        }
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Ocurrió un error de conexión al procesar tu pedido. Por favor intenta de nuevo.');
+      }
     }
   };
 
@@ -132,27 +263,46 @@ export default function CheckoutPage() {
 
   return (
     <div className="store-shell py-10 sm:py-14 relative">
-      {/* Modal de Éxito */}
-      {isSuccess && (
-        <div className="relative flex items-center justify-center mb-8">
-          <div className="bg-white rounded-xl border border-neutral-200 max-w-xl w-full p-8 text-center animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-10 h-10 text-neutral-600" />
-            </div>
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-3">¡Pedido recibido!</h2>
-            <p className="text-gray-500 mb-8 leading-relaxed">
-              Tu pedido {orderNumber} ha sido registrado. Te contactaremos pronto para organizar el envío de tu paquete.
-            </p>
-            <Button onClick={() => router.push('/')} fullWidth size="lg" className="rounded-lg py-6 text-base transition-all">
-              Volver al inicio
-            </Button>
+      <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-primary mb-8">Finalizar compra</h1>
+
+      {/* Aviso de fallo al cargar envío (RF-035) */}
+      {settingsError && (
+        <div role="alert" className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between text-amber-800 text-sm">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+            <span>{settingsError}</span>
           </div>
+          <Button variant="outline" size="sm" onClick={loadSettings} disabled={settingsLoading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${settingsLoading ? 'animate-spin' : ''}`} />
+            Reintentar
+          </Button>
         </div>
       )}
 
-      <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-primary mb-8">Finalizar compra</h1>
+      {/* Modal/Banner de Conciliación de Precios/Stock (T-023, PA-007) */}
+      {reconciliationNotice && reconciliationNotice.length > 0 && (
+        <div role="alert" className="mb-8 p-6 bg-blue-50 border border-blue-200 rounded-xl">
+          <div className="flex items-start gap-3 mb-4">
+            <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-bold text-blue-900 text-base">Actualización de resumen de compra</h3>
+              <p className="text-blue-800 text-sm mt-1">
+                Detectamos cambios recientes en disponibilidad o precios. Por favor confirma el nuevo resumen para continuar:
+              </p>
+            </div>
+          </div>
+          <ul className="list-disc list-inside space-y-1 text-sm text-blue-900 mb-5 pl-2">
+            {reconciliationNotice.map((note, idx) => (
+              <li key={idx}>{note}</li>
+            ))}
+          </ul>
+          <Button onClick={handleAcceptReconciliation} size="sm">
+            Aceptar cambios y continuar con la compra
+          </Button>
+        </div>
+      )}
 
-      {!isSuccess && <div className="flex flex-col lg:flex-row gap-8 max-w-6xl mx-auto">
+      <div className="flex flex-col lg:flex-row gap-8 max-w-6xl mx-auto">
         <form id="checkout-form" onSubmit={handleSubmit} className="flex-1 bg-white border border-gray-200 rounded-lg p-6 md:p-8">
           <h2 className="text-xl font-bold mb-6 text-primary border-b pb-2">Datos personales</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -260,7 +410,7 @@ export default function CheckoutPage() {
           <div className="bg-white border border-gray-200 rounded-xl p-6 lg:sticky lg:top-40">
             <h2 className="text-lg font-bold text-primary mb-4">Resumen del Pedido</h2>
             <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2">
-              {items.map(item => (
+              {items.map((item) => (
                 <div key={item.productId} className="flex justify-between text-sm">
                   <div className="flex flex-col">
                     <span className="font-medium text-gray-800 line-clamp-1">{item.name}</span>
@@ -278,7 +428,17 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Envío</span>
-                <span>{shippingCost === 0 ? 'Gratis' : `Q ${shippingCost.toFixed(2)}`}</span>
+                <span>
+                  {settingsLoading ? (
+                    <span className="text-gray-400">Calculando...</span>
+                  ) : shippingCost === null ? (
+                    <span className="text-amber-600">Tarifa pendiente</span>
+                  ) : shippingCost === 0 ? (
+                    'Gratis'
+                  ) : (
+                    `Q ${shippingCost.toFixed(2)}`
+                  )}
+                </span>
               </div>
               <div className="flex justify-between font-bold text-xl text-primary tabular-nums mt-4 pt-4 border-t border-gray-200">
                 <span>Total a Pagar</span>
@@ -301,14 +461,18 @@ export default function CheckoutPage() {
                 type="submit"
                 size="lg"
                 fullWidth
-                disabled={loading}
+                disabled={loading || settingsLoading || shippingCost === null || requiresReconfirmation}
               >
-                {loading ? 'Procesando pedido...' : 'Confirmar Pedido'}
+                {loading
+                  ? 'Procesando pedido...'
+                  : requiresReconfirmation
+                  ? 'Revisa los cambios arriba'
+                  : 'Confirmar Pedido'}
               </Button>
             </div>
           </div>
         </div>
-      </div>}
+      </div>
     </div>
   );
 }

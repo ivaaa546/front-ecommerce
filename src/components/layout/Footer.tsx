@@ -4,10 +4,14 @@ import { fetcher } from '@/services/api';
 
 export default async function Footer() {
   let storeName = 'E-COMMERCE';
+  let footerTagline = 'Tu tienda de confianza con pago contra entrega en toda Guatemala.';
+  let footerCopyright = 'Todos los derechos reservados. Pago contra entrega garantizado.';
   try {
     const res = await fetcher<any>('/settings');
     if (res?.storeName) storeName = res.storeName;
-  } catch (err) {
+    if (res?.footerTagline) footerTagline = res.footerTagline;
+    if (res?.footerCopyright) footerCopyright = res.footerCopyright;
+  } catch {
     // ignorar error
   }
 
@@ -16,7 +20,7 @@ export default async function Footer() {
       <div className="store-shell flex flex-col md:flex-row justify-between items-center gap-6">
         <div>
           <span className="text-xl font-bold tracking-tighter text-accent-light">{storeName.toUpperCase()}</span>
-          <p className="text-sm text-gray-300 mt-2">Tu tienda de confianza con pago contra entrega en toda Guatemala.</p>
+          <p className="text-sm text-gray-300 mt-2">{footerTagline}</p>
         </div>
 
         <nav aria-label="Enlaces del pie de página" className="flex flex-wrap gap-6 text-sm text-gray-300">
@@ -29,7 +33,7 @@ export default async function Footer() {
         </nav>
       </div>
       <div className="store-shell mt-8 pt-4 border-t border-gray-800 text-center text-xs text-gray-400">
-        &copy; {new Date().getFullYear()} {storeName}. Todos los derechos reservados. Pago contra entrega garantizado.
+        &copy; {new Date().getFullYear()} {storeName}. {footerCopyright}
       </div>
     </footer>
   );

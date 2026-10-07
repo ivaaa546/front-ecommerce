@@ -153,7 +153,7 @@ export default function SearchBar() {
             </ul>
           ) : (
             <div className="p-4 text-center text-sm text-gray-500">
-              No se encontraron resultados para "{query}"
+              No se encontraron resultados para &quot;{query}&quot;
             </div>
           )}
         </div>
