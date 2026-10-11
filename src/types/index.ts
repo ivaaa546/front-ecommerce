@@ -10,6 +10,17 @@ export interface Category {
   subCategories?: Category[];
 }
 
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  name: string;
+  sku: string;
+  price: string | number;
+  stock: number;
+  images: string[];
+  status: 'ACTIVE' | 'INACTIVE';
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -25,20 +36,33 @@ export interface Product {
   featured: boolean;
   categoryId: string;
   category?: Partial<Category>;
+  variants?: ProductVariant[];
 }
 
 export interface AuthoritativeOrderItem {
   productId: string;
+  variantId?: string | null;
   productName: string;
+  variantName?: string | null;
+  sku?: string | null;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
 }
 
+export type OrderStatus =
+  | 'PENDIENTE'
+  | 'CONFIRMADO'
+  | 'PREPARANDO'
+  | 'ENVIADO'
+  | 'ENTREGADO'
+  | 'CANCELADO'
+  | 'DEVUELTO';
+
 export interface AuthoritativeOrderResponse {
   orderId: string;
   orderNumber: string;
-  status: 'PENDIENTE' | 'CONFIRMADO' | 'PREPARANDO' | 'ENVIADO' | 'ENTREGADO';
+  status: OrderStatus;
   items: AuthoritativeOrderItem[];
   subtotal: number;
   shippingCost: number;
@@ -50,6 +74,13 @@ export interface AuthoritativeOrderResponse {
     email?: string;
   };
   createdAt: string;
+  cancelledAt?: string | null;
+  cancellationReason?: string | null;
+  cancelledBy?: string | null;
+  returnedAt?: string | null;
+  returnReason?: string | null;
+  returnedBy?: string | null;
+  stockRestored?: boolean;
 }
 
 export interface PriceConflictDetails {

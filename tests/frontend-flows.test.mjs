@@ -41,3 +41,18 @@ test('T-034: configuración administrativa libera loading y ofrece reintento ant
   assert.match(source, /No se pudo cargar la configuración/);
   assert.match(source, /onClick=\{loadSettings\}/);
 });
+
+test('T-012, T-013: soporte de variantes en carrito, selector de producto y checkout', () => {
+  const cartSource = read('src/store/useCartStore.ts');
+  assert.match(cartSource, /variantId\?: string/);
+  assert.match(cartSource, /variantName\?: string/);
+  assert.match(cartSource, /item\.variantId \? `\$\{item\.productId\}-\$\{item\.variantId\}` : item\.productId/);
+
+  const viewSource = read('src/components/features/ProductClientView.tsx');
+  assert.match(viewSource, /product\.variants/);
+  assert.match(viewSource, /selectedVariantId/);
+  assert.match(viewSource, /Por favor selecciona una variante para poder comprar/);
+
+  const checkoutSource = read('src/app/(store)/checkout/page.tsx');
+  assert.match(checkoutSource, /\.\.\.\(i\.variantId \? \{ variantId: i\.variantId \} : \{\}\)/);
+});

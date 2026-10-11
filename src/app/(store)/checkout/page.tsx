@@ -127,6 +127,28 @@ export default function CheckoutPage() {
           continue;
         }
 
+        if (item.variantId) {
+          const variant = fresh.variants?.find((v) => v.id === item.variantId);
+          if (!variant || variant.status !== 'ACTIVE') {
+            notices.push(`La opción "${item.variantName || item.name}" ya no está disponible para venta y ha sido retirada del carrito.`);
+            continue;
+          }
+
+          const vPrice = typeof variant.price === 'string' ? parseFloat(variant.price) : Number(variant.price);
+          if (!isNaN(vPrice) && Math.abs(vPrice - item.price) > 0.001) {
+            notices.push(`El precio de "${item.name} (${variant.name})" cambió de Q${item.price.toFixed(2)} a Q${vPrice.toFixed(2)}.`);
+          }
+
+          if (variant.stock < item.quantity) {
+            if (variant.stock === 0) {
+              notices.push(`La opción "${item.name} (${variant.name})" se agotó y no puede comprarse.`);
+            } else {
+              notices.push(`El stock de "${item.name} (${variant.name})" cambió: tu cantidad se ajustó a las ${variant.stock} unidades disponibles.`);
+            }
+          }
+          continue;
+        }
+
         const freshPrice = typeof fresh.price === 'string' ? parseFloat(fresh.price) : Number(fresh.price);
         if (!isNaN(freshPrice) && Math.abs(freshPrice - item.price) > 0.001) {
           notices.push(`El precio de "${item.name}" cambió de Q${item.price.toFixed(2)} a Q${freshPrice.toFixed(2)}.`);
@@ -199,7 +221,11 @@ export default function CheckoutPage() {
           exactAddress: formData.exactAddress.trim(),
           reference: formData.reference ? formData.reference.trim() : undefined,
         },
-        items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        items: items.map((i) => ({
+          productId: i.productId,
+          ...(i.variantId ? { variantId: i.variantId } : {}),
+          quantity: i.quantity,
+        })),
         paymentMethod: 'CASH_ON_DELIVERY',
       };
 
@@ -413,15 +439,21 @@ export default function CheckoutPage() {
           <div className="bg-white border border-gray-200 rounded-xl p-6 lg:sticky lg:top-40">
             <h2 className="text-lg font-bold text-primary mb-4">Resumen del Pedido</h2>
             <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2">
-              {items.map((item) => (
-                <div key={item.productId} className="flex justify-between text-sm">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-gray-800 line-clamp-1">{item.name}</span>
-                    <span className="text-gray-500">Cant: {item.quantity}</span>
+              {items.map((item) => {
+                const itemKey = item.variantId ? `${item.productId}-${item.variantId}` : item.productId;
+                return (
+                  <div key={itemKey} className="flex justify-between text-sm">
+                    <div className="flex flex-col pr-2">
+                      <span className="font-medium text-gray-800 line-clamp-1">{item.name}</span>
+                      {item.variantName && (
+                        <span className="text-xs text-gray-500 font-medium">{item.variantName}</span>
+                      )}
+                      <span className="text-gray-500 text-xs mt-0.5">Cant: {item.quantity}</span>
+                    </div>
+                    <span className="text-gray-800 font-medium whitespace-nowrap">Q {(item.price * item.quantity).toFixed(2)}</span>
                   </div>
-                  <span className="text-gray-800 font-medium">Q {(item.price * item.quantity).toFixed(2)}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="border-t border-gray-200 pt-4 space-y-2">

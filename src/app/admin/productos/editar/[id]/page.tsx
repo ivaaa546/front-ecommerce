@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetcher } from '@/services/api';
-import { Category, Product } from '@/types';
+import { Category, Product, ProductVariant } from '@/types';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { Plus, Trash2, Edit2, Layers } from 'lucide-react';
 
 export default function EditarProducto({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -14,6 +15,23 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(true);
   const [uploading, setUploading] = useState(false);
+
+  // Estado de gestión de variantes
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [variantForm, setVariantForm] = useState({
+    name: '',
+    sku: '',
+    price: '',
+    stock: '',
+  });
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
+  const [editingVariantData, setEditingVariantData] = useState({
+    name: '',
+    sku: '',
+    price: '',
+    stock: '',
+  });
+  const [variantLoading, setVariantLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -31,11 +49,13 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
     // Cargar categorías y producto a la vez
     const loadData = async () => {
       try {
-        const [cats, products] = await Promise.all([
+        const [cats, products, vars] = await Promise.all([
           fetcher<Category[]>('/admin/categories', { requireAuth: true }),
-          fetcher<Product[]>('/admin/products', { requireAuth: true })
+          fetcher<Product[]>('/admin/products', { requireAuth: true }),
+          fetcher<ProductVariant[]>(`/admin/products/${params.id}/variants`, { requireAuth: true }).catch(() => [] as ProductVariant[])
         ]);
         setCategories(cats);
+        setVariants(vars || []);
 
         // Encontrar el producto
         const product = products.find(p => p.id === params.id);
@@ -148,6 +168,86 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
     getCategoryPath(a, categories).localeCompare(getCategoryPath(b, categories))
   );
 
+  const handleAddVariant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!variantForm.name.trim() || !variantForm.sku.trim() || !variantForm.price) {
+      alert('Nombre, SKU y Precio son obligatorios para la variante.');
+      return;
+    }
+
+    setVariantLoading(true);
+    try {
+      const newVar = await fetcher<ProductVariant>(`/admin/products/${params.id}/variants`, {
+        method: 'POST',
+        requireAuth: true,
+        body: JSON.stringify({
+          name: variantForm.name.trim(),
+          sku: variantForm.sku.trim(),
+          price: parseFloat(variantForm.price),
+          stock: variantForm.stock ? parseInt(variantForm.stock, 10) : 0,
+        }),
+      });
+
+      setVariants([...variants, newVar]);
+      setVariantForm({ name: '', sku: '', price: '', stock: '' });
+      alert('Variante agregada exitosamente');
+    } catch (err: any) {
+      alert(err.message || 'Error al agregar variante');
+    } finally {
+      setVariantLoading(false);
+    }
+  };
+
+  const handleDeleteVariant = async (variantId: string) => {
+    if (!confirm('¿Estás seguro de eliminar esta variante?')) return;
+
+    try {
+      await fetcher(`/admin/products/${params.id}/variants/${variantId}`, {
+        method: 'DELETE',
+        requireAuth: true,
+      });
+
+      setVariants(variants.filter((v) => v.id !== variantId));
+    } catch (err: any) {
+      alert(err.message || 'Error al eliminar variante');
+    }
+  };
+
+  const handleStartEditVariant = (v: ProductVariant) => {
+    setEditingVariantId(v.id);
+    setEditingVariantData({
+      name: v.name,
+      sku: v.sku,
+      price: v.price.toString(),
+      stock: v.stock.toString(),
+    });
+  };
+
+  const handleSaveEditVariant = async (variantId: string) => {
+    if (!editingVariantData.name.trim() || !editingVariantData.sku.trim() || !editingVariantData.price) {
+      alert('Nombre, SKU y Precio son requeridos');
+      return;
+    }
+
+    try {
+      const updated = await fetcher<ProductVariant>(`/admin/products/${params.id}/variants/${variantId}`, {
+        method: 'PUT',
+        requireAuth: true,
+        body: JSON.stringify({
+          name: editingVariantData.name.trim(),
+          sku: editingVariantData.sku.trim(),
+          price: parseFloat(editingVariantData.price),
+          stock: parseInt(editingVariantData.stock, 10) || 0,
+        }),
+      });
+
+      setVariants(variants.map((v) => (v.id === variantId ? updated : v)));
+      setEditingVariantId(null);
+    } catch (err: any) {
+      alert(err.message || 'Error al actualizar variante');
+    }
+  };
+
   if (fetchingData) {
     return <div className="p-8">Cargando información del producto...</div>;
   }
@@ -217,6 +317,175 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
           </Button>
         </div>
       </form>
+
+      {/* Sección de Gestión de Variantes de Producto (T-008, RF-001) */}
+      <div className="mt-10 pt-8 border-t border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Layers className="w-5 h-5 text-gray-800" />
+            <h2 className="text-xl font-bold text-gray-900">Variantes de este Producto</h2>
+          </div>
+          <span className="text-xs font-semibold bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full">
+            {variants.length} {variants.length === 1 ? 'variante' : 'variantes'}
+          </span>
+        </div>
+
+        <p className="text-xs text-gray-500 mb-6">
+          Si defines variantes (por ejemplo, tallas o colores), cada una tendrá su propio SKU, precio y stock. Los clientes en la tienda deberán elegir una variante disponible para comprar.
+        </p>
+
+        {/* Lista de variantes existentes */}
+        {variants.length > 0 ? (
+          <div className="space-y-2 mb-6">
+            {variants.map((v) => {
+              const isEditing = editingVariantId === v.id;
+              if (isEditing) {
+                return (
+                  <div key={v.id} className="p-3 bg-gray-50 border border-black rounded-lg space-y-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <Input
+                        label="Nombre"
+                        value={editingVariantData.name}
+                        onChange={(e) => setEditingVariantData({ ...editingVariantData, name: e.target.value })}
+                      />
+                      <Input
+                        label="SKU"
+                        value={editingVariantData.sku}
+                        onChange={(e) => setEditingVariantData({ ...editingVariantData, sku: e.target.value })}
+                      />
+                      <Input
+                        label="Precio (Q)"
+                        type="number"
+                        step="0.01"
+                        value={editingVariantData.price}
+                        onChange={(e) => setEditingVariantData({ ...editingVariantData, price: e.target.value })}
+                      />
+                      <Input
+                        label="Stock"
+                        type="number"
+                        value={editingVariantData.stock}
+                        onChange={(e) => setEditingVariantData({ ...editingVariantData, stock: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingVariantId(null)}
+                        className="px-3 py-1.5 text-xs text-gray-600 hover:text-black border border-gray-300 rounded-md"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveEditVariant(v.id)}
+                        className="px-3 py-1.5 text-xs font-semibold bg-black text-white rounded-md hover:bg-zinc-800"
+                      >
+                        Guardar
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={v.id}
+                  className="flex items-center justify-between p-3.5 bg-gray-50 border border-gray-200 rounded-lg text-sm"
+                >
+                  <div className="min-w-0 flex-1 pr-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-900">{v.name}</span>
+                      <span className="text-xs font-mono bg-white px-2 py-0.5 border border-gray-200 rounded text-gray-600">
+                        {v.sku}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                      <span>Precio: <strong className="text-gray-900">Q{Number(v.price).toFixed(2)}</strong></span>
+                      <span>Stock: <strong className={v.stock <= 0 ? 'text-red-600' : 'text-gray-900'}>{v.stock}</strong></span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleStartEditVariant(v)}
+                      className="p-1.5 text-gray-500 hover:text-black hover:bg-gray-200 rounded transition-colors"
+                      title="Editar variante"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteVariant(v.id)}
+                      className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                      title="Eliminar variante"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="p-4 bg-gray-50 border border-dashed border-gray-200 rounded-lg text-center mb-6">
+            <p className="text-xs text-gray-500">
+              Este producto no tiene variantes y se vende como producto simple.
+            </p>
+          </div>
+        )}
+
+        {/* Formulario para agregar nueva variante */}
+        <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+          <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1.5">
+            <Plus className="w-4 h-4" />
+            Agregar Nueva Variante
+          </h3>
+
+          <form onSubmit={handleAddVariant} className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input
+                label="Nombre de variante"
+                placeholder="ej. Talla XL / Negro"
+                required
+                value={variantForm.name}
+                onChange={(e) => setVariantForm({ ...variantForm, name: e.target.value })}
+              />
+              <Input
+                label="SKU único"
+                placeholder="ej. CAM-XL-BLK"
+                required
+                value={variantForm.sku}
+                onChange={(e) => setVariantForm({ ...variantForm, sku: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input
+                label="Precio (Q)"
+                type="number"
+                step="0.01"
+                placeholder="ej. 95.00"
+                required
+                value={variantForm.price}
+                onChange={(e) => setVariantForm({ ...variantForm, price: e.target.value })}
+              />
+              <Input
+                label="Stock inicial"
+                type="number"
+                placeholder="ej. 10"
+                value={variantForm.stock}
+                onChange={(e) => setVariantForm({ ...variantForm, stock: e.target.value })}
+              />
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <Button type="submit" disabled={variantLoading}>
+                {variantLoading ? 'Guardando...' : '+ Guardar Variante'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

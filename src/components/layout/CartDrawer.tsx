@@ -138,8 +138,10 @@ export default function CartDrawer() {
             </div>
           ) : (
             <div className="space-y-4 py-2">
-              {items.map((item) => (
-                <div key={item.productId} className="flex gap-3.5 items-start py-2 group">
+              {items.map((item) => {
+                const itemKey = item.variantId ? `${item.productId}-${item.variantId}` : item.productId;
+                return (
+                <div key={itemKey} className="flex gap-3.5 items-start py-2 group">
                   {/* Imagen del Producto en marco nítido */}
                   <div className="w-20 h-24 sm:w-24 sm:h-28 bg-white border border-gray-200 rounded-md p-1 flex items-center justify-center shrink-0 overflow-hidden">
                     <img
@@ -162,13 +164,19 @@ export default function CartDrawer() {
                         </Link>
                         <button
                           type="button"
-                          onClick={() => removeItem(item.productId)}
+                          onClick={() => removeItem(item.productId, item.variantId)}
                           className="p-1 text-gray-700 hover:text-red-600 transition-colors shrink-0"
                           aria-label={`Eliminar ${item.name}`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
+
+                      {item.variantName && (
+                        <p className="text-xs text-gray-500 font-medium mt-0.5">
+                          {item.variantName}
+                        </p>
+                      )}
 
                       {item.stock <= 5 && (
                         <p className="text-[11px] text-neutral-600 font-medium mt-0.5">
@@ -183,7 +191,7 @@ export default function CartDrawer() {
                       <div className="border border-gray-900 rounded-lg flex items-center h-11 bg-white">
                         <button
                           type="button"
-                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.productId, item.quantity - 1, item.variantId)}
                           disabled={item.quantity <= 1}
                           className="px-2.5 h-full flex items-center justify-center text-gray-800 hover:bg-gray-100 disabled:opacity-30 text-xs font-semibold"
                           aria-label="Disminuir"
@@ -195,7 +203,7 @@ export default function CartDrawer() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.productId, item.quantity + 1, item.variantId)}
                           disabled={item.quantity >= item.stock}
                           className="px-2.5 h-full flex items-center justify-center text-gray-800 hover:bg-gray-100 disabled:opacity-30 text-sm font-semibold"
                           aria-label="Aumentar"
@@ -211,7 +219,8 @@ export default function CartDrawer() {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

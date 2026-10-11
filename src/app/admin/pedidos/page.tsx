@@ -10,7 +10,7 @@ interface Order {
   orderNumber: string;
   customerName: string;
   total: string;
-  status: 'PENDIENTE' | 'CONFIRMADO' | 'PREPARANDO' | 'ENVIADO' | 'ENTREGADO';
+  status: 'PENDIENTE' | 'CONFIRMADO' | 'PREPARANDO' | 'ENVIADO' | 'ENTREGADO' | 'CANCELADO' | 'DEVUELTO';
   createdAt: string;
 }
 
@@ -34,6 +34,8 @@ export default function AdminOrders() {
       case 'PREPARANDO': return 'warning';
       case 'ENVIADO': return 'success';
       case 'ENTREGADO': return 'success';
+      case 'CANCELADO': return 'danger';
+      case 'DEVUELTO': return 'warning';
       default: return 'default';
     }
   };
@@ -47,7 +49,7 @@ export default function AdminOrders() {
       <p className="-mt-5 mb-6 text-sm text-neutral-500">Gestiona los pedidos de tu tienda y consulta su estado.</p>
       {error && <p role="alert" className="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-700">{error}. Recarga la página para volver a intentarlo.</p>}
       <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Filtrar pedidos por estado">
-        {['TODOS', 'PENDIENTE', 'CONFIRMADO', 'PREPARANDO', 'ENVIADO', 'ENTREGADO'].map(status => <button key={status} onClick={() => setFilter(status)} aria-pressed={filter === status} className={`min-h-11 rounded-lg px-4 text-sm ${filter === status ? 'bg-primary text-white' : 'bg-white border border-neutral-200 text-neutral-600'}`}>{({TODOS:'Todos', PENDIENTE:'Pendientes', CONFIRMADO:'Confirmados', PREPARANDO:'En preparación', ENVIADO:'Enviados', ENTREGADO:'Entregados'} as Record<string,string>)[status]}</button>)}
+        {['TODOS', 'PENDIENTE', 'CONFIRMADO', 'PREPARANDO', 'ENVIADO', 'ENTREGADO', 'CANCELADO', 'DEVUELTO'].map(status => <button key={status} onClick={() => setFilter(status)} aria-pressed={filter === status} className={`min-h-11 rounded-lg px-4 text-sm ${filter === status ? 'bg-primary text-white' : 'bg-white border border-neutral-200 text-neutral-600'}`}>{({TODOS:'Todos', PENDIENTE:'Pendientes', CONFIRMADO:'Confirmados', PREPARANDO:'En preparación', ENVIADO:'Enviados', ENTREGADO:'Entregados', CANCELADO:'Cancelados', DEVUELTO:'Devueltos'} as Record<string,string>)[status]}</button>)}
       </div>
       <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
         <table className="w-full text-left border-collapse text-sm">

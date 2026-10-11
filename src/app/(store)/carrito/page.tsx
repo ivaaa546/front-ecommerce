@@ -54,8 +54,10 @@ export default function CarritoPage() {
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* Lista de productos */}
         <div className="flex-1 w-full space-y-4 divide-y divide-gray-100">
-          {items.map((item) => (
-            <div key={item.productId} className="pt-4 first:pt-0 flex gap-4 items-start">
+          {items.map((item) => {
+            const itemKey = item.variantId ? `${item.productId}-${item.variantId}` : item.productId;
+            return (
+            <div key={itemKey} className="pt-4 first:pt-0 flex gap-4 items-start">
               {/* Imagen del Producto */}
               <div className="w-20 h-24 sm:w-24 sm:h-28 bg-white border border-gray-200 rounded-md p-1.5 flex items-center justify-center shrink-0 overflow-hidden">
                 <img
@@ -77,13 +79,19 @@ export default function CarritoPage() {
                     </Link>
                     <button
                       type="button"
-                      onClick={() => removeItem(item.productId)}
+                      onClick={() => removeItem(item.productId, item.variantId)}
                       className="p-1 text-gray-700 hover:text-red-600 transition-colors shrink-0"
                       aria-label={`Eliminar ${item.name}`}
                     >
                       <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                   </div>
+
+                  {item.variantName && (
+                    <p className="text-xs text-gray-500 font-medium mt-0.5">
+                      {item.variantName}
+                    </p>
+                  )}
 
                   {item.stock <= 5 && (
                     <p className="text-xs text-neutral-600 font-medium mt-0.5">
@@ -98,7 +106,7 @@ export default function CarritoPage() {
                     <button
                       type="button"
                       className="px-2.5 h-full flex items-center justify-center text-gray-800 hover:bg-gray-100 disabled:opacity-30 text-xs font-semibold"
-                      onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.productId, item.quantity - 1, item.variantId)}
                       disabled={item.quantity <= 1}
                       aria-label="Disminuir"
                     >
@@ -110,7 +118,7 @@ export default function CarritoPage() {
                     <button
                       type="button"
                       className="px-2.5 h-full flex items-center justify-center text-gray-800 hover:bg-gray-100 disabled:opacity-30 text-sm font-semibold"
-                      onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.productId, item.quantity + 1, item.variantId)}
                       disabled={item.quantity >= item.stock}
                       aria-label="Aumentar"
                     >
@@ -124,7 +132,8 @@ export default function CarritoPage() {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Resumen del pedido */}

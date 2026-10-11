@@ -86,7 +86,20 @@ export default function AdminProducts() {
                   <span className="font-medium text-primary">{p.name}</span>
                 </td>
                 <td className="p-4 text-gray-600">Q {parseFloat(p.price).toFixed(2)}</td>
-                <td className="p-4 font-mono">{p.stock}</td>
+                <td className="p-4 font-mono">
+                  {p.variants && p.variants.length > 0 ? (
+                    <div>
+                      <span className="font-semibold text-gray-900">
+                        {p.variants.reduce((acc, v) => acc + (v.stock || 0), 0)}
+                      </span>
+                      <span className="block text-[11px] text-gray-500 font-sans">
+                        ({p.variants.length} {p.variants.length === 1 ? 'variante' : 'variantes'})
+                      </span>
+                    </div>
+                  ) : (
+                    p.stock
+                  )}
+                </td>
                 <td className="p-4 text-gray-500">{p.category?.name}</td>
                 <td className="p-4"><button type="button" className="min-h-11" onClick={() => toggleStatus(p.id, p.status)} aria-label={`Cambiar estado de ${p.name}`}>
                   <Badge variant={p.status === 'ACTIVE' ? 'success' : 'default'}>{p.status}</Badge></button>
