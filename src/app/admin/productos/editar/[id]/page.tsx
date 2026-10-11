@@ -276,7 +276,15 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
         <div className="grid grid-cols-2 gap-4">
           <Input label="Precio (Q)" type="number" step="0.01" required value={form.price} onChange={e => setForm({...form, price: e.target.value})} />
           <Input label="Precio Anterior (opcional)" type="number" step="0.01" value={form.previousPrice} onChange={e => setForm({...form, previousPrice: e.target.value})} />
-          <Input label="Stock" type="number" required value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} />
+          <div>
+            <Input label="Stock Físico Inicial" type="number" required value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} />
+            <Link
+              href={`/admin/inventario?search=${encodeURIComponent(form.sku)}`}
+              className="text-xs text-primary hover:underline mt-1 block"
+            >
+              Ajustar stock con trazabilidad en Inventario →
+            </Link>
+          </div>
           <Input label="SKU" required value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} />
         </div>
 

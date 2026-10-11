@@ -2,11 +2,12 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Package, Tags, ShoppingBag, Settings, LogOut, ArrowUpRight, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, Tags, ShoppingBag, Settings, LogOut, ArrowUpRight, Menu, X, Boxes } from 'lucide-react';
 const links = [
   {name:'Resumen', href:'/admin', icon:LayoutDashboard},
   {name:'Pedidos', href:'/admin/pedidos', icon:ShoppingBag},
   {name:'Productos', href:'/admin/productos', icon:Package},
+  {name:'Inventario', href:'/admin/inventario', icon:Boxes},
   {name:'Categorías', href:'/admin/categorias', icon:Tags},
   {name:'Configuración', href:'/admin/configuracion', icon:Settings},
 ];
