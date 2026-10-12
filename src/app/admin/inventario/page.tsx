@@ -11,6 +11,7 @@ import {
 } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/BadgeCard';
+import { Pagination } from '@/components/ui/Pagination';
 import { Search, History, SlidersHorizontal, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 
 export default function AdminInventario() {
@@ -309,32 +310,14 @@ export default function AdminInventario() {
         </table>
       </div>
 
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-between text-sm text-neutral-600">
-          <div>
-            Mostrando página {page} de {totalPages} ({total} ítems en total)
-          </div>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Anterior
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              Siguiente
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* Paginación unificada */}
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        totalItems={total}
+        pageSize={10}
+        onPageChange={setPage}
+      />
 
       {/* MODAL DE AJUSTE MANUAL */}
       {adjustingItem && (

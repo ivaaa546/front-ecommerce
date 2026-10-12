@@ -15,7 +15,7 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Tu tienda, al día.</h1>
         <p className="mt-3 max-w-xl leading-relaxed text-neutral-500">Un punto de partida para revisar pedidos, mantener el catálogo y actualizar la experiencia de compra.</p>
       </div>
-      <Link href="/admin/configuracion" className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+      <Link href="/admin/configuracion/portada" className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
         <Image className="h-4 w-4" aria-hidden="true" /> Ajustar portada
       </Link>
     </header>

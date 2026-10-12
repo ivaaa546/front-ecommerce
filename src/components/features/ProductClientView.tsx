@@ -108,13 +108,12 @@ export function ProductClientView({ product }: { product: Product }) {
                           setShowVariantWarning(false);
                         }}
                         disabled={isOutOfStock}
-                        className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold border transition-all flex items-center gap-1.5 ${
-                          isSelected
+                        className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold border transition-all flex items-center gap-1.5 ${isSelected
                             ? 'border-black bg-black text-white shadow-xs'
                             : isOutOfStock
-                            ? 'border-gray-200 bg-gray-100 text-gray-400 line-through cursor-not-allowed'
-                            : 'border-gray-300 bg-white text-gray-800 hover:border-gray-900 hover:bg-gray-50'
-                        }`}
+                              ? 'border-gray-200 bg-gray-100 text-gray-400 line-through cursor-not-allowed'
+                              : 'border-gray-300 bg-white text-gray-800 hover:border-gray-900 hover:bg-gray-50'
+                          }`}
                       >
                         <span>{v.name}</span>
                         {isOutOfStock && <span className="text-[10px] font-normal no-underline">(Agotado)</span>}
@@ -162,7 +161,7 @@ export function ProductClientView({ product }: { product: Product }) {
               </div>
               <div className="flex items-center gap-2.5">
                 <ShieldCheck className="w-4 h-4 text-neutral-600 flex-shrink-0" aria-hidden="true" />
-                <span><strong>Garantía de calidad:</strong> Inspeccionado antes del empaque.</span>
+                <span><strong>Garantía de calidad:</strong> Productos seleccionados.</span>
               </div>
             </div>
           </div>

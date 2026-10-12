@@ -7,7 +7,7 @@ import { Category, Product, ProductVariant } from '@/types';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { Plus, Trash2, Edit2, Layers } from 'lucide-react';
+import { Plus, Trash2, Edit2, Layers, Image as ImageIcon } from 'lucide-react';
 
 export default function EditarProducto({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -23,6 +23,7 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
     sku: '',
     price: '',
     stock: '',
+    images: [] as string[],
   });
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
   const [editingVariantData, setEditingVariantData] = useState({
@@ -30,8 +31,10 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
     sku: '',
     price: '',
     stock: '',
+    images: [] as string[],
   });
   const [variantLoading, setVariantLoading] = useState(false);
+  const [uploadingVariantImg, setUploadingVariantImg] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -185,17 +188,61 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
           sku: variantForm.sku.trim(),
           price: parseFloat(variantForm.price),
           stock: variantForm.stock ? parseInt(variantForm.stock, 10) : 0,
+          images: variantForm.images || [],
         }),
       });
 
       setVariants([...variants, newVar]);
-      setVariantForm({ name: '', sku: '', price: '', stock: '' });
+      setVariantForm({ name: '', sku: '', price: '', stock: '', images: [] });
       alert('Variante agregada exitosamente');
     } catch (err: any) {
       alert(err.message || 'Error al agregar variante');
     } finally {
       setVariantLoading(false);
     }
+  };
+
+  const handleVariantImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    if (variantForm.images.length + files.length > 3) {
+      alert('Puedes subir un máximo de 3 imágenes por variante.');
+      return;
+    }
+
+    setUploadingVariantImg(true);
+    const newUrls: string[] = [];
+    try {
+      const token = localStorage.getItem('token');
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/uploads`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+        if (!res.ok) throw new Error('Error subiendo imagen de variante');
+        const data = await res.json();
+        newUrls.push(data.url);
+      }
+      setVariantForm((prev) => ({
+        ...prev,
+        images: [...prev.images, ...newUrls],
+      }));
+    } catch (err: any) {
+      alert(err.message || 'Error al subir imagen de variante');
+    } finally {
+      setUploadingVariantImg(false);
+    }
+  };
+
+  const removeVariantImage = (index: number) => {
+    setVariantForm((prev) => {
+      const updated = [...prev.images];
+      updated.splice(index, 1);
+      return { ...prev, images: updated };
+    });
   };
 
   const handleDeleteVariant = async (variantId: string) => {
@@ -220,6 +267,7 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
       sku: v.sku,
       price: v.price.toString(),
       stock: v.stock.toString(),
+      images: v.images || [],
     });
   };
 
@@ -238,6 +286,7 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
           sku: editingVariantData.sku.trim(),
           price: parseFloat(editingVariantData.price),
           stock: parseInt(editingVariantData.stock, 10) || 0,
+          images: editingVariantData.images || [],
         }),
       });
 
@@ -400,16 +449,25 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
                   key={v.id}
                   className="flex items-center justify-between p-3.5 bg-gray-50 border border-gray-200 rounded-lg text-sm"
                 >
-                  <div className="min-w-0 flex-1 pr-4">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-900">{v.name}</span>
-                      <span className="text-xs font-mono bg-white px-2 py-0.5 border border-gray-200 rounded text-gray-600">
-                        {v.sku}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
-                      <span>Precio: <strong className="text-gray-900">Q{Number(v.price).toFixed(2)}</strong></span>
-                      <span>Stock: <strong className={v.stock <= 0 ? 'text-red-600' : 'text-gray-900'}>{v.stock}</strong></span>
+                  <div className="flex items-center gap-3 min-w-0 flex-1 pr-4">
+                    {v.images && v.images.length > 0 ? (
+                      <img src={v.images[0]} alt={v.name} className="h-10 w-10 object-cover rounded border bg-white shrink-0" />
+                    ) : (
+                      <div className="h-10 w-10 flex items-center justify-center bg-gray-100 text-gray-400 rounded border shrink-0">
+                        <ImageIcon className="w-4 h-4" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-900 truncate">{v.name}</span>
+                        <span className="text-xs font-mono bg-white px-2 py-0.5 border border-gray-200 rounded text-gray-600 shrink-0">
+                          {v.sku}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                        <span>Precio: <strong className="text-gray-900">Q{Number(v.price).toFixed(2)}</strong></span>
+                        <span>Stock: <strong className={v.stock <= 0 ? 'text-red-600' : 'text-gray-900'}>{v.stock}</strong></span>
+                      </div>
                     </div>
                   </div>
 
@@ -486,8 +544,44 @@ export default function EditarProducto({ params }: { params: { id: string } }) {
               />
             </div>
 
+            {/* Subida de foto para la variante */}
+            <div className="space-y-2 pt-2 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-gray-500" />
+                  Foto de la variante / color (Opcional - Máx 3)
+                </label>
+                <span className="text-[11px] text-gray-400">Se muestra al seleccionar esta opción</span>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleVariantImageUpload}
+                disabled={uploadingVariantImg || variantForm.images.length >= 3}
+                className="text-xs file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-medium file:bg-white file:border-gray-300 file:border hover:file:bg-gray-100"
+              />
+              {uploadingVariantImg && <span className="text-xs text-gray-500">Subiendo foto de variante...</span>}
+              {variantForm.images.length > 0 && (
+                <div className="flex gap-2 pt-1">
+                  {variantForm.images.map((imgUrl, idx) => (
+                    <div key={idx} className="relative group">
+                      <img src={imgUrl} alt="Variante preview" className="h-12 w-12 object-cover rounded border bg-white" />
+                      <button
+                        type="button"
+                        onClick={() => removeVariantImage(idx)}
+                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="pt-2 flex justify-end">
-              <Button type="submit" disabled={variantLoading}>
+              <Button type="submit" disabled={variantLoading || uploadingVariantImg}>
                 {variantLoading ? 'Guardando...' : '+ Guardar Variante'}
               </Button>
             </div>

@@ -137,8 +137,8 @@ export const AddToCartButton = ({
           </span>
         ) : (
           <span className="text-xs font-medium text-neutral-600 bg-neutral-50 px-2 py-1 rounded-md border border-neutral-100 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-pulse"></span>
-            En existencia ({effectiveStock} disponibles)
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+            En existencia
           </span>
         )}
       </div>

@@ -6,11 +6,16 @@ import { Category } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/BadgeCard';
+import { Pagination } from '@/components/ui/Pagination';
+import { Search, X } from 'lucide-react';
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   // Form State
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -113,13 +118,55 @@ export default function AdminCategories() {
 
   if (loading) return <div className="p-8">Cargando...</div>;
 
+  const filteredCategories = categories.filter((c) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    const matchName = c.name.toLowerCase().includes(q);
+    const matchSlug = c.slug.toLowerCase().includes(q);
+    const matchParent = c.parent?.name?.toLowerCase().includes(q);
+    return matchName || matchSlug || matchParent;
+  });
+
+  const totalPages = Math.ceil(filteredCategories.length / pageSize);
+  const paginatedCategories = filteredCategories.slice((page - 1) * pageSize, page * pageSize);
+
   return (
     <div>
-      <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <h1 className="text-3xl font-bold text-primary">Categorías</h1>
         <Button onClick={isFormOpen ? closeForm : openCreate}>
           {isFormOpen ? 'Cancelar' : '+ Nueva Categoría'}
         </Button>
+      </div>
+
+      {/* Buscador de categorías */}
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="relative min-w-[280px] max-w-md flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+          <input
+            type="text"
+            placeholder="Buscar por nombre o slug..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="w-full rounded-lg border border-neutral-200 bg-white pl-10 pr-10 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('');
+                setPage(1);
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+              aria-label="Limpiar búsqueda"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {error && <div className="bg-red-50 text-red-600 p-4 mb-6 rounded">{error}</div>}
@@ -164,7 +211,7 @@ export default function AdminCategories() {
             </tr>
           </thead>
           <tbody>
-            {categories.map((cat) => (
+            {paginatedCategories.map((cat) => (
               <tr key={cat.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
                 <td className="p-4">
                   <span className="font-medium text-primary block">{cat.name}</span>
@@ -195,14 +242,24 @@ export default function AdminCategories() {
                 </td>
               </tr>
             ))}
-            {categories.length === 0 && (
+            {filteredCategories.length === 0 && (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-gray-500">No hay categorías registradas.</td>
+                <td colSpan={4} className="p-8 text-center text-gray-500">
+                  {search ? `No se encontraron categorías para "${search}".` : 'No hay categorías registradas.'}
+                </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        totalItems={filteredCategories.length}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
     </div>
   );
 }
