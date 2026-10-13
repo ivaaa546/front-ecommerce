@@ -9,6 +9,9 @@ import Link from 'next/link';
 export default function AdminOrderDetail({ params }: { params: { id: string } }) {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const [returnReason, setReturnReason] = useState('');
+  const [returnLines, setReturnLines] = useState<Record<string, { quantity: number; condition: string; restocked: boolean }>>({});
 
   const loadOrder = async () => {
     try {
@@ -64,20 +67,42 @@ export default function AdminOrderDetail({ params }: { params: { id: string } })
   };
 
   const handleReturnOrder = async () => {
-    const reason = prompt('Indica el motivo de la devolución:');
-    if (reason === null) return;
-    const finalReason = reason.trim() || 'Devolución procesada por administración';
+    const items = Object.entries(returnLines)
+      .filter(([, line]) => line.quantity > 0)
+      .map(([orderItemId, line]) => ({ orderItemId, ...line }));
+    if (items.length === 0) {
+      alert('Selecciona al menos un producto y una cantidad para devolver.');
+      return;
+    }
+    const finalReason = returnReason.trim() || 'Devolución procesada por administración';
 
     try {
       await fetcher(`/admin/orders/${params.id}/return`, {
         method: 'POST',
         requireAuth: true,
-        body: JSON.stringify({ reason: finalReason, actor: 'ADMIN' }),
+        body: JSON.stringify({ reason: finalReason, actor: 'ADMIN', items }),
       });
-      alert('Devolución registrada y stock repuesto al inventario correctamente.');
+      alert('Devolución registrada correctamente. Solo los productos aptos fueron repuestos.');
+      setReturnDialogOpen(false);
       loadOrder();
     } catch (err: any) {
       alert(err.message || 'Error al procesar la devolución');
+    }
+  };
+
+  const handleMarkReturning = async () => {
+    const reason = prompt('Selecciona o indica el motivo del retorno por no entrega:', 'Devuelto por la transportadora');
+    if (reason === null) return;
+    try {
+      await fetcher(`/admin/orders/${params.id}/returning`, {
+        method: 'POST',
+        requireAuth: true,
+        body: JSON.stringify({ reason: reason.trim() || 'Paquete no entregado', actor: 'ADMIN' }),
+      });
+      alert('Pedido marcado como retornando. Procesa la recepción cuando el paquete regrese.');
+      loadOrder();
+    } catch (err: any) {
+      alert(err.message || 'Error al marcar el retorno');
     }
   };
 
@@ -85,7 +110,17 @@ export default function AdminOrderDetail({ params }: { params: { id: string } })
   if (!order) return <div>Pedido no encontrado</div>;
 
   const canCancel = ['PENDIENTE', 'CONFIRMADO', 'PREPARANDO'].includes(order.status);
-  const canReturn = order.status === 'ENTREGADO';
+  const canReturn = order.status === 'ENTREGADO' || order.status === 'RETORNANDO';
+
+  const openReturnDialog = () => {
+    const initial: Record<string, { quantity: number; condition: string; restocked: boolean }> = {};
+    order.items.forEach((item: any) => {
+      initial[item.id] = { quantity: 0, condition: 'APTO_VENTA', restocked: true };
+    });
+    setReturnLines(initial);
+    setReturnReason('');
+    setReturnDialogOpen(true);
+  };
 
   const badgeVariant =
     order.status === 'CANCELADO'
@@ -94,6 +129,8 @@ export default function AdminOrderDetail({ params }: { params: { id: string } })
       ? 'warning'
       : order.status === 'ENTREGADO'
       ? 'success'
+      : order.status === 'RETORNANDO'
+      ? 'warning'
       : 'default';
 
   return (
@@ -106,8 +143,11 @@ export default function AdminOrderDetail({ params }: { params: { id: string } })
         <div className="text-right">
           <Badge variant={badgeVariant}>{order.status}</Badge>
           <div className="mt-4 flex items-center justify-end gap-2">
-            {order.status !== 'ENTREGADO' && order.status !== 'CANCELADO' && order.status !== 'DEVUELTO' && (
+            {order.status !== 'ENTREGADO' && order.status !== 'RETORNANDO' && order.status !== 'CANCELADO' && order.status !== 'DEVUELTO' && (
               <Button onClick={advanceStatus}>Avanzar Estado</Button>
+            )}
+            {order.status === 'ENVIADO' && (
+              <Button variant="outline" onClick={handleMarkReturning}>Retorno por no entrega</Button>
             )}
             {canCancel && (
               <Button variant="danger" onClick={handleCancelOrder}>
@@ -115,8 +155,8 @@ export default function AdminOrderDetail({ params }: { params: { id: string } })
               </Button>
             )}
             {canReturn && (
-              <Button variant="outline" onClick={handleReturnOrder}>
-                Procesar Devolución
+              <Button variant="outline" onClick={openReturnDialog}>
+                {order.status === 'RETORNANDO' ? 'Registrar recepción del retorno' : 'Procesar Devolución'}
               </Button>
             )}
           </div>
@@ -140,7 +180,7 @@ export default function AdminOrderDetail({ params }: { params: { id: string } })
               <strong>Fecha:</strong> {order.cancelledAt || order.returnedAt ? new Date(order.cancelledAt || order.returnedAt).toLocaleString('es-GT') : 'N/A'}
             </span>
             <span>
-              <strong>Stock repuesto:</strong> {order.stockRestored ? 'Sí (100% restaurado)' : 'No'}
+               <strong>Stock procesado:</strong> {order.stockRestored ? 'Sí (según condición y cantidad)' : 'No'}
             </span>
           </div>
         </div>
@@ -191,6 +231,63 @@ export default function AdminOrderDetail({ params }: { params: { id: string } })
           <p className="text-xl font-bold text-primary">Total: Q {parseFloat(order.total).toFixed(2)}</p>
         </div>
       </div>
+
+      {returnDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-labelledby="return-title">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+            <h2 id="return-title" className="text-xl font-bold text-primary">Registrar devolución</h2>
+            <p className="mt-1 text-sm text-neutral-600">Selecciona cantidades y define qué productos vuelven al inventario.</p>
+            <div className="mt-5 space-y-4">
+              {order.items.map((item: any) => {
+                const line = returnLines[item.id];
+                return (
+                  <div key={item.id} className="rounded-lg border border-neutral-200 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="font-medium">{item.productName}</p>
+                        <p className="text-xs text-neutral-500">Máximo a devolver: {item.quantity}</p>
+                      </div>
+                      <label className="text-sm">Cantidad
+                        <input
+                          type="number" min="0" max={item.quantity} value={line?.quantity ?? 0}
+                          onChange={(event) => setReturnLines((current) => ({ ...current, [item.id]: { ...current[item.id], quantity: Math.min(item.quantity, Math.max(0, Number(event.target.value) || 0)) } }))}
+                          className="ml-2 w-20 rounded border border-neutral-300 px-2 py-1"
+                        />
+                      </label>
+                    </div>
+                    {(line?.quantity ?? 0) > 0 && (
+                      <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
+                        <label>Condición
+                          <select
+                            value={line.condition}
+                            onChange={(event) => setReturnLines((current) => ({ ...current, [item.id]: { ...current[item.id], condition: event.target.value, restocked: event.target.value === 'APTO_VENTA' } }))}
+                            className="ml-2 rounded border border-neutral-300 px-2 py-1"
+                          >
+                            <option value="APTO_VENTA">Apto para venderse</option>
+                            <option value="DANADO">Dañado / no vendible</option>
+                            <option value="INSPECCION">Pendiente de inspección</option>
+                          </select>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input type="checkbox" checked={line.restocked} disabled={line.condition !== 'APTO_VENTA'} onChange={(event) => setReturnLines((current) => ({ ...current, [item.id]: { ...current[item.id], restocked: event.target.checked } }))} />
+                          Reingresar al inventario
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <label className="mt-5 block text-sm font-medium">Motivo
+              <textarea value={returnReason} onChange={(event) => setReturnReason(event.target.value)} className="mt-1 w-full rounded border border-neutral-300 p-2" rows={2} placeholder="Describe el motivo de la devolución" />
+            </label>
+            <div className="mt-5 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setReturnDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleReturnOrder}>Registrar devolución</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

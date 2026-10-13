@@ -12,7 +12,7 @@ interface Order {
   orderNumber: string;
   customerName: string;
   total: string;
-  status: 'PENDIENTE' | 'CONFIRMADO' | 'PREPARANDO' | 'ENVIADO' | 'ENTREGADO' | 'CANCELADO' | 'DEVUELTO';
+  status: 'PENDIENTE' | 'CONFIRMADO' | 'PREPARANDO' | 'ENVIADO' | 'RETORNANDO' | 'ENTREGADO' | 'CANCELADO' | 'DEVUELTO';
   createdAt: string;
 }
 
@@ -38,6 +38,7 @@ export default function AdminOrders() {
       case 'CONFIRMADO': return 'info';
       case 'PREPARANDO': return 'warning';
       case 'ENVIADO': return 'success';
+      case 'RETORNANDO': return 'warning';
       case 'ENTREGADO': return 'success';
       case 'CANCELADO': return 'danger';
       case 'DEVUELTO': return 'warning';
@@ -97,7 +98,7 @@ export default function AdminOrders() {
         </div>
 
         <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar pedidos por estado">
-          {['TODOS', 'PENDIENTE', 'CONFIRMADO', 'PREPARANDO', 'ENVIADO', 'ENTREGADO', 'CANCELADO', 'DEVUELTO'].map(status => (
+          {['TODOS', 'PENDIENTE', 'CONFIRMADO', 'PREPARANDO', 'ENVIADO', 'RETORNANDO', 'ENTREGADO', 'CANCELADO', 'DEVUELTO'].map(status => (
             <button
               key={status}
               onClick={() => { setFilter(status); setPage(1); }}
@@ -106,7 +107,7 @@ export default function AdminOrders() {
                 filter === status ? 'bg-primary text-white' : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50'
               }`}
             >
-              {({TODOS:'Todos', PENDIENTE:'Pendientes', CONFIRMADO:'Confirmados', PREPARANDO:'En preparación', ENVIADO:'Enviados', ENTREGADO:'Entregados', CANCELADO:'Cancelados', DEVUELTO:'Devueltos'} as Record<string,string>)[status]}
+               {({TODOS:'Todos', PENDIENTE:'Pendientes', CONFIRMADO:'Confirmados', PREPARANDO:'En preparación', ENVIADO:'Enviados', RETORNANDO:'Retornando', ENTREGADO:'Entregados', CANCELADO:'Cancelados', DEVUELTO:'Devueltos'} as Record<string,string>)[status]}
             </button>
           ))}
         </div>

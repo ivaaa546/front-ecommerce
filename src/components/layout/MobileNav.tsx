@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, ChevronRight, LayoutGrid } from 'lucide-react';
+import { Menu, X, Search, ChevronRight } from 'lucide-react';
 import { Category } from '@/types';
 import SearchBar from '../features/SearchBar';
 
@@ -140,7 +140,6 @@ export default function MobileNav({ categories, quickLinks = [], storeName = 'E-
           {/* Categories Section */}
           <div className="py-3">
             <div className="px-3 py-1 text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-              <LayoutGrid className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Categorías</span>
             </div>
             <div className="mt-1 space-y-0.5">
